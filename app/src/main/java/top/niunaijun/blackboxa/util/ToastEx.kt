@@ -1,0 +1,10 @@
+package top.niunaijun.blackboxa.util
+
+import android.content.Context
+import android.widget.Toast
+
+fun Context.toast(message: String, duration: Int = Toast.LENGTH_SHORT) {
+    Toast.makeText(this, message, duration).show()
+}
+
+fun Context.toastLong(message: String) = toast(message, Toast.LENGTH_LONG)

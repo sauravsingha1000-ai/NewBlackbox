@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory android:title="General">
+        <SwitchPreferenceCompat
+            android:key="enable_gms"
+            android:title="Enable GMS Support"
+            android:summary="Google Mobile Services compatibility"
+            android:defaultValue="false" />
+
+        <SwitchPreferenceCompat
+            android:key="enable_multi_user"
+            android:title="Multi-User Mode"
+            android:summary="Enable multiple virtual user spaces"
+            android:defaultValue="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Location">
+        <SwitchPreferenceCompat
+            android:key="enable_fake_location"
+            android:title="Fake Location"
+            android:summary="Override GPS for virtual apps"
+            android:defaultValue="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Device">
+        <SwitchPreferenceCompat
+            android:key="enable_device_spoof"
+            android:title="Device Spoofing"
+            android:summary="Fake device model/IMEI per app"
+            android:defaultValue="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="About">
+        <Preference
+            android:key="version"
+            android:title="Version"
+            android:summary="1.0.0" />
+        <Preference
+            android:key="github"
+            android:title="GitHub"
+            android:summary="https://github.com/ALEX5402/NewBlackbox" />
+    </PreferenceCategory>
+</PreferenceScreen>

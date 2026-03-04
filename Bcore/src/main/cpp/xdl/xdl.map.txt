@@ -1,0 +1,10 @@
+XDL {
+  global:
+    xdl_open;
+    xdl_sym;
+    xdl_close;
+    xdl_iterate_phdr;
+    xdl_addr;
+    xdl_info;
+  local: *;
+};
