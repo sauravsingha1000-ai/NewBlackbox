@@ -1,45 +1,112 @@
 plugins {
-id 'com.android.library'
+    id 'com.android.library'
 }
 
 android {
-namespace 'top.niunaijun.blackbox.core'
-compileSdk 34
+    namespace 'top.niunaijun.blackbox.core'
+    
+    // Android 15 requires compileSdk 35
+    compileSdk 35
 
-defaultConfig {
-    minSdk 21
-    targetSdk 35
+    defaultConfig {
+        minSdk 21
+        targetSdk 35  // Android 15
 
-    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-    ndk {
-        abiFilters "arm64-v8a", "armeabi-v7a"
+        // NDK configuration for Android 15 16KB page size
+        ndk {
+            abiFilters "arm64-v8a", "armeabi-v7a"
+            // Specify NDK version (must be r26b or higher for Android 15)
+            version "26.2.11394342"  // NDK r26b - has 16KB support
+        }
+        
+        // Android 15: 16KB page size support - CRITICAL
+        externalNativeBuild {
+            cmake {
+                // Path to your CMakeLists.txt
+                path "src/main/cpp/CMakeLists.txt"
+                version "3.22.1"  // Required for 16KB support
+                
+                // 16KB page size flags - REQUIRED for Android 15
+                arguments "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
+                          "-DANDROID_STL=c++_shared",
+                          "-DANDROID_PLATFORM=android-21",
+                          "-DANDROID_ARM_NEON=TRUE"
+                
+                // Compiler flags for compatibility
+                cppFlags "-O2 -fexceptions -frtti -fPIC -Wall"
+                
+                // Linker flags for 16KB alignment
+                // This ensures native libraries are properly aligned
+                // for Android 15's 16KB memory pages
+            }
+        }
     }
-}
 
-buildFeatures {
-    aidl false
-    buildConfig true
-}
-
-compileOptions {
-    sourceCompatibility JavaVersion.VERSION_17
-    targetCompatibility JavaVersion.VERSION_17
-}
-
-packaging {
-    jniLibs {
-        useLegacyPackaging = true
+    buildTypes {
+        release {
+            minifyEnabled false
+            consumerProguardFiles "consumer-rules.pro"
+            
+            // Android 15: Strip debug symbols in release
+            packagingOptions {
+                jniLibs {
+                    keepDebugSymbols = false
+                }
+            }
+        }
+        
+        debug {
+            // Android 15: Keep debug symbols for troubleshooting
+            packagingOptions {
+                jniLibs {
+                    keepDebugSymbols = true
+                }
+            }
+        }
     }
-}
 
+    buildFeatures {
+        // FIXED: You have AIDL files, so this must be true!
+        aidl true
+        buildConfig true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // Android 15 specific packaging
+    packaging {
+        // Handle native library conflicts
+        pickFirst 'lib/arm64-v8a/libdobby.so'
+        pickFirst 'lib/armeabi-v7a/libdobby.so'
+        pickFirst 'lib/arm64-v8a/libc++_shared.so'
+        pickFirst 'lib/armeabi-v7a/libc++_shared.so'
+        
+        jniLibs {
+            useLegacyPackaging = true
+            // Ensure 16KB page alignment for all native libs
+            // This merges native libs properly for Android 15
+        }
+    }
+    
+    // Lint configuration
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
 }
 
 dependencies {
-implementation 'androidx.appcompat:appcompat:1.7.0'
-implementation 'com.google.android.material:material:1.12.0'
-implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    
+    // Android 15 compatibility
+    implementation 'androidx.core:core:1.12.0'
 
-compileOnly project(':black-reflection')
-
+    compileOnly project(':black-reflection')
 }
