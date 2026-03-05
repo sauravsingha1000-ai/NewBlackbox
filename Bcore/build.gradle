@@ -42,20 +42,9 @@ android {
         release {
             minifyEnabled false
             consumerProguardFiles "consumer-rules.pro"
-
-            packagingOptions {
-                jniLibs {
-                    keepDebugSymbols = false
-                }
-            }
         }
 
         debug {
-            packagingOptions {
-                jniLibs {
-                    keepDebugSymbols = true
-                }
-            }
         }
     }
 
