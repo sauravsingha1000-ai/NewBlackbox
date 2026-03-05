@@ -1,7 +1,9 @@
-name: Android CI hhhhh
+name: Android CI
 
 on:
   push:
+    branches: [ main ]
+  pull_request:
     branches: [ main ]
 
 jobs:
@@ -18,14 +20,52 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: '11076708'  # Latest stable
+          packages: 'platforms;android-35 build-tools;35.0.0 ndk;26.2.11394342'  # Android 15 + NDK r26b
+
+      - name: Accept Android SDK Licenses
+        run: yes | sdkmanager --licenses || true
+
+      - name: Setup NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26c  # Required for Android 15 16KB page support
+          add-to-path: true
+
+      - name: Verify NDK Installation
+        run: |
+          echo "NDK Path: $ANDROID_NDK_HOME"
+          echo "NDK Version: $(cat $ANDROID_NDK_HOME/source.properties | grep Pkg.Revision)"
+          cat $ANDROID_NDK_HOME/source.properties
+
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Clean and Build APK
-        run: ./gradlew clean assembleDebug --no-build-cache
+      - name: Clean Build
+        run: ./gradlew clean
+
+      - name: Build with Gradle (Android 15 Compatible)
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
+          GRADLE_OPTS: "-Xmx6g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError"
+        run: ./gradlew assembleDebug --stacktrace --no-build-cache
+
+      - name: Check APK Output
+        run: |
+          ls -la app/build/outputs/apk/debug/
+          file app/build/outputs/apk/debug/app-debug.apk || true
+          unzip -l app/build/outputs/apk/debug/app-debug.apk | grep -E "(lib/.*\.so|AndroidManifest)" || true
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
+        if: always()  # Upload even if build fails partially
         with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: app-debug-android15
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+          retention-days: 7
+          
