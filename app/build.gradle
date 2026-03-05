@@ -6,32 +6,26 @@ plugins {
 
 android {
     namespace 'top.niunaijun.blackboxa'
-    
-    // Android 15 (API 35) requires compileSdk 35
     compileSdk 35
 
     defaultConfig {
         applicationId "top.niunaijun.blackboxa"
         minSdk 21
-        targetSdk 35  // Android 15
+        targetSdk 35
         versionCode 10
         versionName "1.0.0"
 
         multiDexEnabled true
 
-        // NDK configuration for Android 15 16KB page size
         ndk {
             abiFilters "arm64-v8a", "armeabi-v7a"
-            // Ensure 16KB page alignment for Android 15
             debugSymbolLevel 'FULL'
         }
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
-        // Android 15 16KB page size support flags
         externalNativeBuild {
             cmake {
-                // Critical for Android 15: Enable 16KB page support
                 arguments "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
                           "-DANDROID_STL=c++_shared",
                           "-DANDROID_PLATFORM=android-21"
@@ -47,7 +41,6 @@ android {
                     getDefaultProguardFile('proguard-android-optimize.txt'),
                     'proguard-rules.pro'
             )
-            // Android 15: Ensure proper signing for native libs
             packagingOptions {
                 jniLibs {
                     keepDebugSymbols = false
@@ -57,8 +50,6 @@ android {
 
         debug {
             debuggable true
-            // REMOVED: matchingFallbacks = ['release'] - was causing Gradle error
-            // Android 15: Keep debug symbols for troubleshooting
             packagingOptions {
                 jniLibs {
                     keepDebugSymbols = true
@@ -81,7 +72,6 @@ android {
         jvmTarget = '17'
     }
 
-    // Android 15 specific packaging options
     packaging {
         resources {
             excludes += ['/META-INF/{AL2.0,LGPL2.1}', 
@@ -94,13 +84,11 @@ android {
         
         jniLibs {
             useLegacyPackaging = true
-            // Android 15: Ensure native libs are page-aligned
             pickFirsts += ['lib/arm64-v8a/libdobby.so', 
                           'lib/armeabi-v7a/libdobby.so']
         }
     }
     
-    // Android 15: Lint checks
     lint {
         checkReleaseBuilds false
         abortOnError false
@@ -134,6 +122,5 @@ dependencies {
     implementation libs.gson
     implementation libs.osmdroid
     
-    // Android 15 compatibility: Ensure core library is up to date
     implementation 'androidx.core:core:1.12.0'
 }
