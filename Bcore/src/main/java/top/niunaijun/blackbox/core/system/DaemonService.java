@@ -3,6 +3,7 @@ package top.niunaijun.blackbox.core.system;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.service.notification.StatusBarNotification;
 import android.app.Service;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
