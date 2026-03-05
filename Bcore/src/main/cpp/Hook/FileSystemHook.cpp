@@ -28,7 +28,7 @@ int FileSystemHook::hook_open(const char* path, int flags, ...) {
     if (flags & O_CREAT) {
         va_list args;
         va_start(args, flags);
-        mode = va_arg(args, mode_t);
+        mode = (mode_t)va_arg(args, int);
         va_end(args);
     }
 
