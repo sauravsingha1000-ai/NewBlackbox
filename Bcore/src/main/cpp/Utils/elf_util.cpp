@@ -23,7 +23,7 @@ uintptr_t getLibraryBase(const std::string& libraryName) {
     uintptr_t base = 0;
     while (fgets(line, sizeof(line), f)) {
         if (strstr(line, libraryName.c_str())) {
-            sscanf(line, "%lx-", &base);
+            sscanf(line, "%x-", &base);
             break;
         }
     }
