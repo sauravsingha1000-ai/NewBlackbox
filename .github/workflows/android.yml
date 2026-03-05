@@ -2,7 +2,7 @@ name: Android CI
 
 on:
 push:
-branches: [ main ]
+branches: [ "main" ]
 workflow_dispatch:
 
 jobs:
@@ -10,16 +10,15 @@ build:
 runs-on: ubuntu-latest
 
 steps:
-  - name: Checkout
+  - name: Checkout repository
     uses: actions/checkout@v4
 
   - name: Setup Java
     uses: actions/setup-java@v4
     with:
       distribution: temurin
-      java-version: '17'
+      java-version: "17"
 
-  # 🧹 Clean Gradle caches
   - name: Clean Gradle Cache
     run: |
       rm -rf ~/.gradle/caches
@@ -27,11 +26,11 @@ steps:
       rm -rf ~/.gradle/native
       rm -rf ~/.gradle/wrapper
 
-  # 🧹 Clean project build
+  - name: Make gradlew executable
+    run: chmod +x gradlew
+
   - name: Clean Project
-    run: |
-      chmod +x gradlew
-      ./gradlew clean
+    run: ./gradlew clean
 
   - name: Build Debug APK
     run: ./gradlew assembleDebug --no-build-cache --rerun-tasks
