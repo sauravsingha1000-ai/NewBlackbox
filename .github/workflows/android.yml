@@ -1,94 +1,77 @@
 name: Android CI
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+push:
+branches: [ main ]
+pull_request:
+branches: [ main ]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+build:
+runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+steps:
+  - name: Checkout
+    uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+  - name: Setup Java
+    uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          cmdline-tools-version: '11076708'
-          # Install Android 15 (API 35) and NDK r26b
-          packages: 'platforms;android-35 build-tools;35.0.0 ndk;26.2.11394342 platform-tools'
+  - name: Setup Android SDK
+    uses: android-actions/setup-android@v3
+    with:
+      cmdline-tools-version: '11076708'
+      packages: |
+        platforms;android-35
+        build-tools;35.0.0
+        ndk;26.2.11394342
+        platform-tools
 
-      - name: Accept Android SDK Licenses
-        run: yes | sdkmanager --licenses || true
+  - name: Accept Android SDK Licenses
+    run: yes | sdkmanager --licenses || true
 
-      - name: Verify SDK Installation
-        run: |
-          echo "Android SDK Location: $ANDROID_SDK_ROOT"
-          ls -la $ANDROID_SDK_ROOT/ndk/ || echo "NDK directory listing failed"
-          echo "Installed platforms:"
-          sdkmanager --list | grep "platforms;android-35" || true
+  - name: Verify SDK Installation
+    run: |
+      echo "Android SDK Location: $ANDROID_SDK_ROOT"
+      ls -la $ANDROID_SDK_ROOT/ndk/ || true
+      echo "Installed platforms:"
+      sdkmanager --list | grep "platforms;android-35" || true
 
-      - name: Make gradlew executable
-        run: chmod +x gradlew
+  - name: Make gradlew executable
+    run: chmod +x gradlew
 
-      - name: Clean Build
-        run: ./gradlew clean
+  - name: Clean Project
+    run: ./gradlew clean
 
-      - name: Build with Gradle (Android 15 Compatible)
-        env:
-          # Ensure Gradle finds the NDK
-          ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/26.2.11394342
-          ANDROID_NDK: ${{ env.ANDROID_SDK_ROOT }}/ndk/26.2.11394342
-          # Memory settings for native compilation
-          GRADLE_OPTS: "-Xmx6g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8"
-          # Android 15 flags
-          ANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES: "ON"
-        run: |
-          # Verify NDK is accessible
-          if [ -d "$ANDROID_NDK_HOME" ]; then
-            echo "NDK found at: $ANDROID_NDK_HOME"
-            cat $ANDROID_NDK_HOME/source.properties | grep Pkg.Revision || true
-          else
-            echo "WARNING: NDK not found at expected location, trying to locate..."
-            find $ANDROID_SDK_ROOT -name "ndk" -type d 2>/dev/null || true
-          fi
-          
-          # Run build
-          ./gradlew assembleDebug --stacktrace --no-build-cache
+  - name: Build Debug APK
+    env:
+      ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/26.2.11394342
+      ANDROID_NDK: ${{ env.ANDROID_SDK_ROOT }}/ndk/26.2.11394342
+      GRADLE_OPTS: "-Xmx6g -XX:MaxMetaspaceSize=512m -Dfile.encoding=UTF-8"
+      ANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES: "ON"
+    run: |
+      echo "Checking NDK..."
+      if [ -d "$ANDROID_NDK_HOME" ]; then
+        echo "NDK found at: $ANDROID_NDK_HOME"
+        cat $ANDROID_NDK_HOME/source.properties | grep Pkg.Revision || true
+      fi
 
-      - name: Check APK Output
-        run: |
-          echo "=== APK Output ==="
-          ls -la app/build/outputs/apk/debug/ || echo "APK directory not found"
-          
-          if [ -f "app/build/outputs/apk/debug/app-debug.apk" ]; then
-            echo "=== APK Info ==="
-            file app/build/outputs/apk/debug/app-debug.apk
-            
-            echo "=== Native Libraries ==="
-            unzip -l app/build/outputs/apk/debug/app-debug.apk | grep -E "lib/.*\.so" || echo "No native libs found"
-            
-            echo "=== Manifest ==="
-            unzip -p app/build/outputs/apk/debug/app-debug.apk AndroidManifest.xml | head -c 1000 || true
-          fi
+      ./gradlew assembleDebug --stacktrace --no-daemon
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: app-debug-android15
-          path: |
-            app/build/outputs/apk/debug/*.apk
-            Bcore/build/outputs/**/*.so
-          if-no-files-found: warn
-          retention-days: 7
-          
+  - name: Locate APK
+    run: |
+      echo "Searching for APK files..."
+      find app/build -name "*.apk" || echo "No APK found"
+
+  - name: Upload APK Artifact
+    uses: actions/upload-artifact@v4
+    with:
+      name: android-build
+      path: |
+        app/build/outputs/apk/
+        Bcore/build/intermediates/**/*.so
+      if-no-files-found: warn
+      retention-days: 7
