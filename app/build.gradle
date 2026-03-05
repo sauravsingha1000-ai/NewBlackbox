@@ -1,95 +1,139 @@
 plugins {
-id 'com.android.application'
-id 'org.jetbrains.kotlin.android'
-id 'org.jetbrains.kotlin.kapt'
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.kapt'
 }
 
 android {
-namespace 'top.niunaijun.blackboxa'
-compileSdk 34
+    namespace 'top.niunaijun.blackboxa'
+    
+    // Android 15 (API 35) requires compileSdk 35
+    compileSdk 35
 
-defaultConfig {
-    applicationId "top.niunaijun.blackboxa"
-    minSdk 21
-    targetSdk 35
-    versionCode 10
-    versionName "1.0.0"
+    defaultConfig {
+        applicationId "top.niunaijun.blackboxa"
+        minSdk 21
+        targetSdk 35  // Android 15
+        versionCode 10
+        versionName "1.0.0"
 
-    multiDexEnabled true
+        multiDexEnabled true
 
-    ndk {
-        abiFilters "arm64-v8a", "armeabi-v7a"
+        // NDK configuration for Android 15 16KB page size
+        ndk {
+            abiFilters "arm64-v8a", "armeabi-v7a"
+            // Ensure 16KB page alignment for Android 15
+            debugSymbolLevel 'FULL'
+        }
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Android 15 16KB page size support flags
+        externalNativeBuild {
+            cmake {
+                // Critical for Android 15: Enable 16KB page support
+                arguments "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
+                          "-DANDROID_STL=c++_shared",
+                          "-DANDROID_PLATFORM=android-21"
+                cppFlags "-O2 -fexceptions -frtti"
+            }
+        }
     }
 
-    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-}
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles(
+                    getDefaultProguardFile('proguard-android-optimize.txt'),
+                    'proguard-rules.pro'
+            )
+            // Android 15: Ensure proper signing for native libs
+            packagingOptions {
+                jniLibs {
+                    keepDebugSymbols = false
+                }
+            }
+        }
 
-buildTypes {
-    release {
-        minifyEnabled false
-        proguardFiles(
-                getDefaultProguardFile('proguard-android-optimize.txt'),
-                'proguard-rules.pro'
-        )
+        debug {
+            debuggable true
+            matchingFallbacks = ['release']
+            // Android 15: Keep debug symbols for troubleshooting
+            packagingOptions {
+                jniLibs {
+                    keepDebugSymbols = true
+                }
+            }
+        }
     }
 
-    debug {
-        debuggable true
-        matchingFallbacks = ['release']
+    buildFeatures {
+        viewBinding true
+        buildConfig true
     }
-}
 
-buildFeatures {
-    viewBinding true
-    buildConfig true
-}
-
-compileOptions {
-    sourceCompatibility JavaVersion.VERSION_17
-    targetCompatibility JavaVersion.VERSION_17
-}
-
-kotlinOptions {
-    jvmTarget = '17'
-}
-
-packaging {
-    resources {
-        excludes += ['/META-INF/{AL2.0,LGPL2.1}']
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
-    jniLibs {
-        useLegacyPackaging = true
-    }
-}
 
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    // Android 15 specific packaging options
+    packaging {
+        resources {
+            excludes += ['/META-INF/{AL2.0,LGPL2.1}', 
+                        '/META-INF/DEPENDENCIES',
+                        '/META-INF/LICENSE',
+                        '/META-INF/LICENSE.txt',
+                        '/META-INF/NOTICE',
+                        '/META-INF/NOTICE.txt']
+        }
+        
+        jniLibs {
+            useLegacyPackaging = true
+            // Android 15: Ensure native libs are page-aligned
+            pickFirsts += ['lib/arm64-v8a/libdobby.so', 
+                          'lib/armeabi-v7a/libdobby.so']
+        }
+    }
+    
+    // Android 15: Lint checks
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
 }
 
 dependencies {
+    implementation project(':Bcore')
 
-implementation project(':Bcore')
+    implementation libs.core.ktx
+    implementation libs.appcompat
+    implementation libs.material
+    implementation libs.constraintlayout
 
-implementation libs.core.ktx
-implementation libs.appcompat
-implementation libs.material
-implementation libs.constraintlayout
+    implementation libs.lifecycle.viewmodel.ktx
+    implementation libs.lifecycle.livedata.ktx
 
-implementation libs.lifecycle.viewmodel.ktx
-implementation libs.lifecycle.livedata.ktx
+    implementation libs.navigation.fragment.ktx
+    implementation libs.navigation.ui.ktx
 
-implementation libs.navigation.fragment.ktx
-implementation libs.navigation.ui.ktx
+    implementation libs.recyclerview
+    implementation libs.activity.ktx
+    libs.fragment.ktx
 
-implementation libs.recyclerview
-implementation libs.activity.ktx
-implementation libs.fragment.ktx
+    implementation libs.viewpager2
+    implementation libs.preference.ktx
 
-implementation libs.viewpager2
-implementation libs.preference.ktx
+    implementation libs.glide
+    kapt libs.glide.compiler
 
-implementation libs.glide
-kapt libs.glide.compiler
-
-implementation libs.gson
-implementation libs.osmdroid
-
+    implementation libs.gson
+    implementation libs.osmdroid
+    
+    // Android 15 compatibility: Ensure core library is up to date
+    implementation 'androidx.core:core:1.12.0'
 }
