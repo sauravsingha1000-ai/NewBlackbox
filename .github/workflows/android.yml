@@ -37,7 +37,6 @@ steps:
     run: |
       echo "Android SDK Location: $ANDROID_SDK_ROOT"
       ls -la $ANDROID_SDK_ROOT/ndk/ || true
-      echo "Installed platforms:"
       sdkmanager --list | grep "platforms;android-35" || true
 
   - name: Make gradlew executable
@@ -51,20 +50,10 @@ steps:
       ANDROID_NDK_HOME: ${{ env.ANDROID_SDK_ROOT }}/ndk/26.2.11394342
       ANDROID_NDK: ${{ env.ANDROID_SDK_ROOT }}/ndk/26.2.11394342
       GRADLE_OPTS: "-Xmx6g -XX:MaxMetaspaceSize=512m -Dfile.encoding=UTF-8"
-      ANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES: "ON"
-    run: |
-      echo "Checking NDK..."
-      if [ -d "$ANDROID_NDK_HOME" ]; then
-        echo "NDK found at: $ANDROID_NDK_HOME"
-        cat $ANDROID_NDK_HOME/source.properties | grep Pkg.Revision || true
-      fi
-
-      ./gradlew assembleDebug --stacktrace --no-daemon
+    run: ./gradlew assembleDebug --stacktrace --no-daemon
 
   - name: Locate APK
-    run: |
-      echo "Searching for APK files..."
-      find app/build -name "*.apk" || echo "No APK found"
+    run: find app/build -name "*.apk" || echo "No APK found"
 
   - name: Upload APK Artifact
     uses: actions/upload-artifact@v4
