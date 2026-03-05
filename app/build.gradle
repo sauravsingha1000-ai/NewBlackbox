@@ -57,7 +57,7 @@ android {
 
         debug {
             debuggable true
-            matchingFallbacks = ['release']
+            // REMOVED: matchingFallbacks = ['release'] - was causing Gradle error
             // Android 15: Keep debug symbols for troubleshooting
             packagingOptions {
                 jniLibs {
@@ -123,7 +123,7 @@ dependencies {
 
     implementation libs.recyclerview
     implementation libs.activity.ktx
-    libs.fragment.ktx
+    implementation libs.fragment.ktx
 
     implementation libs.viewpager2
     implementation libs.preference.ktx
