@@ -1,45 +1,29 @@
-package top.niunaijun.blackbox.util;
+package top.niunaijun.blackboxa.util
 
-import android.content.Context;
+import android.content.Context
+import android.util.Log
+import java.lang.Thread.UncaughtExceptionHandler
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
+class CrashHandler private constructor() : UncaughtExceptionHandler {
 
-public class CrashHandler implements Thread.UncaughtExceptionHandler {
+private var defaultHandler: UncaughtExceptionHandler? = null
 
-    private static CrashHandler instance = new CrashHandler();
-    private Thread.UncaughtExceptionHandler defaultHandler;
-    private Context context;
+companion object {
+    private val instance = CrashHandler()
 
-    public static CrashHandler getInstance() {
-        return instance;
+    fun get(): CrashHandler {
+        return instance
     }
+}
 
-    public void init(Context ctx) {
-        context = ctx;
-        defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
-        Thread.setDefaultUncaughtExceptionHandler(this);
-    }
+fun init(context: Context) {
+    defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+    Thread.setDefaultUncaughtExceptionHandler(this)
+}
 
-    @Override
-    public void uncaughtException(Thread thread, Throwable throwable) {
+override fun uncaughtException(thread: Thread, throwable: Throwable) {
+    Log.e("CrashHandler", "App crashed!", throwable)
+    defaultHandler?.uncaughtException(thread, throwable)
+}
 
-        try {
-            File dir = new File(context.getExternalFilesDir(null), "crash");
-            if (!dir.exists()) dir.mkdirs();
-
-            File file = new File(dir, "crash.txt");
-
-            PrintWriter pw = new PrintWriter(new FileWriter(file, true));
-            pw.println("===== Crash =====");
-            throwable.printStackTrace(pw);
-            pw.close();
-
-        } catch (Exception ignored) {}
-
-        if (defaultHandler != null) {
-            defaultHandler.uncaughtException(thread, throwable);
-        }
-    }
 }
