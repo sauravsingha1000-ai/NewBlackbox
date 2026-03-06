@@ -22,8 +22,8 @@ override fun onCreate(savedInstanceState: Bundle?) {
 
     binding.recyclerView.layoutManager = LinearLayoutManager(this)
 
-    binding.recyclerView.adapter = DeviceAppsAdapter(apps) { pkg ->
-        BlackBoxCore.get().installPackageAsUser(pkg, 0)
+    binding.recyclerView.adapter = DeviceAppsAdapter(apps) { packageName ->
+        BlackBoxCore.get().installPackageAsUser(packageName, 0)
     }
 }
 
