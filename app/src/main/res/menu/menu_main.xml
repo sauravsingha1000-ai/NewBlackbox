@@ -1,9 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item
-        android:id="@+id/action_settings"
-        android:title="@string/action_settings"
-        android:icon="@drawable/ic_settings"
-        app:showAsAction="ifRoom" />
+<?xml version="1.0" encoding="utf-8"?><menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"><!-- Storage (install APK/APKS from device storage) -->
+<item
+    android:id="@+id/action_storage"
+    android:title="Storage"
+    android:icon="@android:drawable/ic_menu_upload"
+    app:showAsAction="ifRoom" />
+
+<!-- Settings -->
+<item
+    android:id="@+id/action_settings"
+    android:title="@string/action_settings"
+    android:icon="@drawable/ic_settings"
+    app:showAsAction="ifRoom" />
+
 </menu>
