@@ -9,7 +9,6 @@ android:fitsSystemWindows="true">
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:fitsSystemWindows="true"
-    android:background="?attr/colorPrimary"
     app:liftOnScroll="true">
 
     <androidx.appcompat.widget.Toolbar
@@ -17,9 +16,10 @@ android:fitsSystemWindows="true">
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:paddingTop="24dp"
+        android:background="?attr/colorPrimary"
         android:elevation="4dp"
         app:titleTextColor="@android:color/white"
-        app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light" />
+        app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light"/>
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
@@ -27,9 +27,8 @@ android:fitsSystemWindows="true">
         android:layout_height="wrap_content"
         app:tabMode="fixed"
         app:tabGravity="fill"
-        app:tabIndicatorColor="@android:color/white"
-        app:tabTextColor="#80FFFFFF"
-        app:tabSelectedTextColor="@android:color/white"/>
+        app:tabTextColor="@android:color/white"
+        app:tabIndicatorColor="@android:color/white"/>
 
 </com.google.android.material.appbar.AppBarLayout>
 
@@ -37,7 +36,6 @@ android:fitsSystemWindows="true">
     android:id="@+id/viewPager"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
