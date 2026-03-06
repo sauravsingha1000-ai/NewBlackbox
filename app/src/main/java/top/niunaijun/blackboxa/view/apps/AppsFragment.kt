@@ -17,111 +17,147 @@ import top.niunaijun.blackboxa.view.install.DeviceAppsActivity
 
 class AppsFragment : Fragment() {
 
-private var _binding: FragmentAppsBinding? = null
-private val binding get() = _binding!!
+    private var _binding: FragmentAppsBinding? = null
+    private val binding get() = _binding!!
 
-private val viewModel: AppsViewModel by viewModels {
-    AppsFactory(requireActivity().application)
-}
-
-private lateinit var adapter: AppsAdapter
-
-// Storage picker
-private val pickApk =
-    registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { installFromUri(it) }
+    private val viewModel: AppsViewModel by viewModels {
+        AppsFactory(requireActivity().application)
     }
 
-override fun onCreateView(
-    inflater: LayoutInflater,
-    container: ViewGroup?,
-    savedInstanceState: Bundle?
-): View {
-    _binding = FragmentAppsBinding.inflate(inflater, container, false)
-    return binding.root
-}
+    private lateinit var adapter: AppsAdapter
 
-override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-    super.onViewCreated(view, savedInstanceState)
-
-    adapter = AppsAdapter(
-        onLaunch = { app -> viewModel.launchApp(app.packageName) },
-        onUninstall = { app -> viewModel.uninstallApp(app.packageName) }
-    )
-
-    // Grid launcher for virtual apps
-    binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 4)
-    binding.recyclerView.adapter = adapter
-
-    // Install button
-    binding.fabAdd.setOnClickListener {
-        showInstallOptions()
-    }
-
-    viewModel.apps.observe(viewLifecycleOwner) {
-        adapter.submitList(it)
-    }
-
-    viewModel.loading.observe(viewLifecycleOwner) {
-        binding.progressBar.visibility =
-            if (it) View.VISIBLE else View.GONE
-    }
-
-    viewModel.error.observe(viewLifecycleOwner) { msg ->
-        if (!msg.isNullOrEmpty()) {
-            Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
+    // Storage picker
+    private val pickApk =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            uri?.let { installFromUri(it) }
         }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+
+        _binding = FragmentAppsBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    viewModel.loadApps()
-}
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-// Install options dialog
-private fun showInstallOptions() {
+        super.onViewCreated(view, savedInstanceState)
 
-    val options = arrayOf(
-        "Install from Installed Apps",
-        "Install from Storage"
-    )
+        adapter = AppsAdapter(
 
-    AlertDialog.Builder(requireContext())
-        .setTitle("Install App")
-        .setItems(options) { _, which ->
+            onLaunch = { app ->
+                viewModel.launchApp(app.packageName)
+            },
 
-            when (which) {
+            onUninstall = { app ->
+                viewModel.uninstallApp(app.packageName)
+            },
 
-                0 -> {
-                    val intent = Intent(requireContext(), DeviceAppsActivity::class.java)
-                    startActivity(intent)
-                }
+            onClone = { app ->
+                Snackbar.make(binding.root, "Cloning ${app.appName}", Snackbar.LENGTH_SHORT).show()
+            },
 
-                1 -> {
-                    pickApk.launch("*/*")
-                }
+            onClearData = { app ->
+                Snackbar.make(binding.root, "Clearing data for ${app.appName}", Snackbar.LENGTH_SHORT).show()
+            },
+
+            onAppInfo = { app ->
+                Snackbar.make(binding.root, app.packageName, Snackbar.LENGTH_LONG).show()
+            }
+        )
+
+        // Grid launcher
+        binding.recyclerView.layoutManager =
+            GridLayoutManager(requireContext(), 4)
+
+        binding.recyclerView.adapter = adapter
+
+        // Install button
+        binding.fabAdd.setOnClickListener {
+            showInstallOptions()
+        }
+
+        viewModel.apps.observe(viewLifecycleOwner) {
+            adapter.submitList(it)
+        }
+
+        viewModel.loading.observe(viewLifecycleOwner) {
+
+            binding.progressBar.visibility =
+                if (it) View.VISIBLE else View.GONE
+        }
+
+        viewModel.error.observe(viewLifecycleOwner) { msg ->
+
+            if (!msg.isNullOrEmpty()) {
+
+                Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
             }
         }
-        .show()
-}
 
-private fun installFromUri(uri: Uri) {
-
-    val path = try {
-        requireContext()
-            .contentResolver
-            .openFileDescriptor(uri, "r")
-            ?.use { "/proc/self/fd/${it.fd}" }
-    } catch (e: Exception) {
-        null
+        viewModel.loadApps()
     }
 
-    if (path != null) {
-        viewModel.installApp(path)
+    // Install options dialog
+    private fun showInstallOptions() {
+
+        val options = arrayOf(
+
+            "Install from Installed Apps",
+            "Install from Storage"
+        )
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Install App")
+            .setItems(options) { _, which ->
+
+                when (which) {
+
+                    0 -> {
+
+                        val intent = Intent(
+                            requireContext(),
+                            DeviceAppsActivity::class.java
+                        )
+
+                        startActivity(intent)
+                    }
+
+                    1 -> {
+
+                        pickApk.launch("*/*")
+                    }
+                }
+            }
+            .show()
     }
-}
 
-override fun onDestroyView() {
-    super.onDestroyView()
-    _binding = null
-}
+    private fun installFromUri(uri: Uri) {
 
+        val path = try {
+
+            requireContext()
+                .contentResolver
+                .openFileDescriptor(uri, "r")
+                ?.use { "/proc/self/fd/${it.fd}" }
+
+        } catch (e: Exception) {
+
+            null
+        }
+
+        if (path != null) {
+
+            viewModel.installApp(path)
+        }
+    }
+
+    override fun onDestroyView() {
+
+        super.onDestroyView()
+        _binding = null
+    }
 }
