@@ -3,6 +3,7 @@ package top.niunaijun.blackboxa.view.install
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.appcompat.widget.SearchView
@@ -26,8 +27,18 @@ override fun onCreate(savedInstanceState: Bundle?) {
 
     loadApps()
 
-    adapter = DeviceAppsAdapter(filteredApps) { packageName ->
+    val installedPackages = BlackBoxCore.get()
+        .getInstalledApps(0)
+        .map { it.packageName }
+        .toSet()
+
+    adapter = DeviceAppsAdapter(filteredApps, installedPackages) { packageName ->
+
+        Toast.makeText(this, "Installing...", Toast.LENGTH_SHORT).show()
+
         BlackBoxCore.get().installPackageAsUser(packageName, 0)
+
+        Toast.makeText(this, "Installed successfully", Toast.LENGTH_SHORT).show()
     }
 
     binding.recyclerView.layoutManager = LinearLayoutManager(this)
@@ -43,7 +54,6 @@ private fun loadApps() {
 
     packages.forEach { app ->
 
-        // Hide system apps
         if ((app.flags and ApplicationInfo.FLAG_SYSTEM) != 0) return@forEach
 
         val label = pm.getApplicationLabel(app).toString()
@@ -61,7 +71,7 @@ private fun setupSearch() {
 
     binding.search.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
 
-        override fun onQueryTextSubmit(query: String?): Boolean = false
+        override fun onQueryTextSubmit(query: String?) = false
 
         override fun onQueryTextChange(query: String?): Boolean {
 
