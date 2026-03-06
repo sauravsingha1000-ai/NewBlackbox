@@ -36,15 +36,19 @@ override fun initData() {
 }
 
 private fun requestPermissions() {
+
     val perms = mutableListOf<String>()
+
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         perms.add(Manifest.permission.READ_MEDIA_IMAGES)
     } else {
         perms.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
             perms.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
     }
+
     requestPermission.launch(perms.toTypedArray())
 }
 
@@ -54,11 +58,27 @@ override fun onCreateOptionsMenu(menu: Menu): Boolean {
 }
 
 override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
     return when (item.itemId) {
+
+        // Settings button
         R.id.action_settings -> {
             startActivity(Intent(this, SettingActivity::class.java))
             true
         }
+
+        // Storage button (install APK/APKS from device storage)
+        R.id.action_storage -> {
+
+            val intent = Intent(Intent.ACTION_GET_CONTENT)
+            intent.type = "*/*"
+            intent.addCategory(Intent.CATEGORY_OPENABLE)
+
+            startActivity(intent)
+
+            true
+        }
+
         else -> super.onOptionsItemSelected(item)
     }
 }
