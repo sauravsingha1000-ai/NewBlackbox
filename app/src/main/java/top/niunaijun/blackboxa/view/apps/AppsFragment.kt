@@ -11,6 +11,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import top.niunaijun.blackboxa.databinding.FragmentAppsBinding
 import top.niunaijun.blackboxa.view.install.DeviceAppsActivity
@@ -26,7 +28,7 @@ class AppsFragment : Fragment() {
 
     private lateinit var adapter: AppsAdapter
 
-    // Storage picker
+    // Storage picker (APK/APKS/XAPK/APKM)
     private val pickApk =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             uri?.let { installFromUri(it) }
@@ -69,13 +71,13 @@ class AppsFragment : Fragment() {
             }
         )
 
-        // Grid launcher
         binding.recyclerView.layoutManager =
             GridLayoutManager(requireContext(), 4)
 
         binding.recyclerView.adapter = adapter
 
-        // Install button
+        enableDragAndDrop()
+
         binding.fabAdd.setOnClickListener {
             showInstallOptions()
         }
@@ -85,15 +87,12 @@ class AppsFragment : Fragment() {
         }
 
         viewModel.loading.observe(viewLifecycleOwner) {
-
             binding.progressBar.visibility =
                 if (it) View.VISIBLE else View.GONE
         }
 
         viewModel.error.observe(viewLifecycleOwner) { msg ->
-
             if (!msg.isNullOrEmpty()) {
-
                 Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
             }
         }
@@ -101,13 +100,11 @@ class AppsFragment : Fragment() {
         viewModel.loadApps()
     }
 
-    // Install options dialog
     private fun showInstallOptions() {
 
         val options = arrayOf(
-
             "Install from Installed Apps",
-            "Install from Storage"
+            "Install APK / APKS / XAPK / APKM"
         )
 
         AlertDialog.Builder(requireContext())
@@ -117,17 +114,12 @@ class AppsFragment : Fragment() {
                 when (which) {
 
                     0 -> {
-
-                        val intent = Intent(
-                            requireContext(),
-                            DeviceAppsActivity::class.java
-                        )
-
+                        val intent =
+                            Intent(requireContext(), DeviceAppsActivity::class.java)
                         startActivity(intent)
                     }
 
                     1 -> {
-
                         pickApk.launch("*/*")
                     }
                 }
@@ -145,14 +137,50 @@ class AppsFragment : Fragment() {
                 ?.use { "/proc/self/fd/${it.fd}" }
 
         } catch (e: Exception) {
-
             null
         }
 
         if (path != null) {
-
             viewModel.installApp(path)
+        } else {
+            Snackbar.make(binding.root, "Install failed", Snackbar.LENGTH_LONG).show()
         }
+    }
+
+    private fun enableDragAndDrop() {
+
+        val callback = object : ItemTouchHelper.SimpleCallback(
+
+            ItemTouchHelper.UP or
+                    ItemTouchHelper.DOWN or
+                    ItemTouchHelper.LEFT or
+                    ItemTouchHelper.RIGHT,
+            0
+        ) {
+
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+
+                val from = viewHolder.adapterPosition
+                val to = target.adapterPosition
+
+                val list = adapter.currentList.toMutableList()
+
+                val item = list.removeAt(from)
+                list.add(to, item)
+
+                adapter.submitList(list)
+
+                return true
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
+        }
+
+        ItemTouchHelper(callback).attachToRecyclerView(binding.recyclerView)
     }
 
     override fun onDestroyView() {
