@@ -24,15 +24,15 @@ override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
     return Holder(binding)
 }
 
-override fun getItemCount() = list.size
+override fun getItemCount(): Int = list.size
 
 override fun onBindViewHolder(holder: Holder, position: Int) {
 
     val app = list[position]
 
-    holder.binding.icon.setImageDrawable(app.icon)
-    holder.binding.name.text = app.name
-    holder.binding.pkg.text = app.packageName
+    holder.binding.ivIcon.setImageDrawable(app.icon)
+    holder.binding.tvName.text = app.name
+    holder.binding.tvPackage.text = app.packageName
 
     holder.itemView.setOnClickListener {
         install(app.packageName)
