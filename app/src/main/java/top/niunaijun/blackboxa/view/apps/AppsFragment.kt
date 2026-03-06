@@ -28,7 +28,7 @@ class AppsFragment : Fragment() {
 
     private lateinit var adapter: AppsAdapter
 
-    // Storage picker (APK/APKS/XAPK/APKM)
+    // Storage picker
     private val pickApk =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             uri?.let { installFromUri(it) }
@@ -59,11 +59,11 @@ class AppsFragment : Fragment() {
             },
 
             onClone = { app ->
-                Snackbar.make(binding.root, "Cloning ${app.appName}", Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(binding.root, "Clone ${app.appName}", Snackbar.LENGTH_SHORT).show()
             },
 
             onClearData = { app ->
-                Snackbar.make(binding.root, "Clearing data for ${app.appName}", Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(binding.root, "Clear data for ${app.appName}", Snackbar.LENGTH_SHORT).show()
             },
 
             onAppInfo = { app ->
@@ -71,6 +71,7 @@ class AppsFragment : Fragment() {
             }
         )
 
+        // Grid launcher
         binding.recyclerView.layoutManager =
             GridLayoutManager(requireContext(), 4)
 
@@ -78,10 +79,12 @@ class AppsFragment : Fragment() {
 
         enableDragAndDrop()
 
+        // Install button
         binding.fabAdd.setOnClickListener {
             showInstallOptions()
         }
 
+        // Observe installed virtual apps
         viewModel.apps.observe(viewLifecycleOwner) {
             adapter.submitList(it)
         }
@@ -97,9 +100,18 @@ class AppsFragment : Fragment() {
             }
         }
 
+        viewModel.installResult.observe(viewLifecycleOwner) { msg ->
+            if (!msg.isNullOrEmpty()) {
+                Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
+            }
+        }
+
         viewModel.loadApps()
     }
 
+    /**
+     * Install dialog
+     */
     private fun showInstallOptions() {
 
         val options = arrayOf(
@@ -116,6 +128,7 @@ class AppsFragment : Fragment() {
                     0 -> {
                         val intent =
                             Intent(requireContext(), DeviceAppsActivity::class.java)
+
                         startActivity(intent)
                     }
 
@@ -127,6 +140,9 @@ class AppsFragment : Fragment() {
             .show()
     }
 
+    /**
+     * Install APK from storage
+     */
     private fun installFromUri(uri: Uri) {
 
         val path = try {
@@ -137,16 +153,32 @@ class AppsFragment : Fragment() {
                 ?.use { "/proc/self/fd/${it.fd}" }
 
         } catch (e: Exception) {
+
             null
         }
 
         if (path != null) {
-            viewModel.installApp(path)
+
+            val fileName = uri.lastPathSegment ?: "package"
+
+            AlertDialog.Builder(requireContext())
+                .setTitle("Install Package")
+                .setMessage(fileName)
+                .setPositiveButton("Install") { _, _ ->
+                    viewModel.installApp(path)
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+
         } else {
-            Snackbar.make(binding.root, "Install failed", Snackbar.LENGTH_LONG).show()
+
+            Snackbar.make(binding.root, "Invalid file", Snackbar.LENGTH_LONG).show()
         }
     }
 
+    /**
+     * Drag & Drop launcher icons
+     */
     private fun enableDragAndDrop() {
 
         val callback = object : ItemTouchHelper.SimpleCallback(
