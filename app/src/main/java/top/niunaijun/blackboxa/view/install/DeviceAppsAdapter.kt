@@ -24,7 +24,7 @@ override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
     return Holder(binding)
 }
 
-override fun getItemCount(): Int = list.size
+override fun getItemCount() = list.size
 
 override fun onBindViewHolder(holder: Holder, position: Int) {
 
