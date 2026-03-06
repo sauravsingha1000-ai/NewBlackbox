@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.snackbar.Snackbar
+import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.databinding.FragmentAppsBinding
 
 class AppsFragment : Fragment() {
@@ -45,15 +46,16 @@ class AppsFragment : Fragment() {
             onUninstall = { app -> viewModel.uninstallApp(app.packageName) }
         )
 
-        // ⭐ GRID VIEW (Virtual Apps Launcher)
+        // ⭐ Grid launcher for virtual apps
         binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 4)
         binding.recyclerView.adapter = adapter
 
-        // ⭐ Install button → open device apps list
+        // ⭐ Install button opens device apps list
         binding.fabAdd.setOnClickListener {
+
             parentFragmentManager.beginTransaction()
                 .replace(
-                    binding.root.id,
+                    R.id.viewPager, // Activity container
                     DeviceAppsFragment()
                 )
                 .addToBackStack(null)
