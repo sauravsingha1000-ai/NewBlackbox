@@ -7,18 +7,13 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.tabs.TabLayoutMediator
 import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.databinding.ActivityMainBinding
+import top.niunaijun.blackboxa.view.apps.AppsFragment
 import top.niunaijun.blackboxa.view.base.BaseActivity
 import top.niunaijun.blackboxa.view.setting.SettingActivity
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
-
-private lateinit var viewPagerAdapter: ViewPagerAdapter
 
 private val requestPermission =
     registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {}
@@ -27,23 +22,13 @@ override fun getViewBinding() = ActivityMainBinding.inflate(layoutInflater)
 
 override fun initView() {
 
-    // Fix toolbar under status bar on some devices
-    ViewCompat.setOnApplyWindowInsetsListener(binding.toolbar) { view, insets ->
-        val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars())
-        view.setPadding(0, statusBar.top, 0, 0)
-        insets
-    }
-
     setSupportActionBar(binding.toolbar)
-    supportActionBar?.title = getString(R.string.app_name)
+    supportActionBar?.title = "TeristaSpace"
 
-    viewPagerAdapter = ViewPagerAdapter(this)
-    binding.viewPager.adapter = viewPagerAdapter
-    binding.viewPager.offscreenPageLimit = 2
-
-    TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, pos ->
-        tab.text = viewPagerAdapter.getTitle(pos)
-    }.attach()
+    // Load launcher (AppsFragment)
+    supportFragmentManager.beginTransaction()
+        .replace(R.id.container, AppsFragment())
+        .commit()
 }
 
 override fun initData() {
@@ -52,7 +37,6 @@ override fun initData() {
 
 private fun requestPermissions() {
     val perms = mutableListOf<String>()
-
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         perms.add(Manifest.permission.READ_MEDIA_IMAGES)
     } else {
@@ -61,7 +45,6 @@ private fun requestPermissions() {
             perms.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
     }
-
     requestPermission.launch(perms.toTypedArray())
 }
 
@@ -72,12 +55,10 @@ override fun onCreateOptionsMenu(menu: Menu): Boolean {
 
 override fun onOptionsItemSelected(item: MenuItem): Boolean {
     return when (item.itemId) {
-
         R.id.action_settings -> {
             startActivity(Intent(this, SettingActivity::class.java))
             true
         }
-
         else -> super.onOptionsItemSelected(item)
     }
 }
