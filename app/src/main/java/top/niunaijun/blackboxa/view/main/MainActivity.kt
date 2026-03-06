@@ -2,21 +2,31 @@ package top.niunaijun.blackboxa.view.main
 
 import android.Manifest
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.result.contract.ActivityResultContracts
+import top.niunaijun.blackbox.BlackBoxCore
 import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.databinding.ActivityMainBinding
 import top.niunaijun.blackboxa.view.apps.AppsFragment
 import top.niunaijun.blackboxa.view.base.BaseActivity
 import top.niunaijun.blackboxa.view.setting.SettingActivity
+import java.io.File
+import java.io.FileOutputStream
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
 
 private val requestPermission =
     registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {}
+
+// File picker result
+private val pickApk =
+    registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { installApk(it) }
+    }
 
 override fun getViewBinding() = ActivityMainBinding.inflate(layoutInflater)
 
@@ -25,7 +35,6 @@ override fun initView() {
     setSupportActionBar(binding.toolbar)
     supportActionBar?.title = "TeristaSpace"
 
-    // Load launcher (AppsFragment)
     supportFragmentManager.beginTransaction()
         .replace(R.id.container, AppsFragment())
         .commit()
@@ -61,25 +70,43 @@ override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
     return when (item.itemId) {
 
-        // Settings button
         R.id.action_settings -> {
             startActivity(Intent(this, SettingActivity::class.java))
             true
         }
 
-        // Storage button (install APK/APKS from device storage)
+        // Storage install
         R.id.action_storage -> {
 
-            val intent = Intent(Intent.ACTION_GET_CONTENT)
-            intent.type = "*/*"
-            intent.addCategory(Intent.CATEGORY_OPENABLE)
-
-            startActivity(intent)
+            pickApk.launch("*/*")
 
             true
         }
 
         else -> super.onOptionsItemSelected(item)
+    }
+}
+
+// Install APK inside TeristaSpace
+private fun installApk(uri: Uri) {
+
+    try {
+
+        val input = contentResolver.openInputStream(uri) ?: return
+
+        val file = File(cacheDir, "install.apk")
+        val output = FileOutputStream(file)
+
+        input.copyTo(output)
+
+        input.close()
+        output.close()
+
+        // Install inside virtual engine
+        BlackBoxCore.get().installPackageAsUser(file.absolutePath, 0)
+
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
 }
 
