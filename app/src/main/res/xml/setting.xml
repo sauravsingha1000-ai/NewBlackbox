@@ -1,48 +1,80 @@
-<?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<?xml version="1.0" encoding="utf-8"?><PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory android:title="General">
-        <SwitchPreferenceCompat
-            android:key="enable_gms"
-            android:title="Enable GMS Support"
-            android:summary="Google Mobile Services compatibility"
-            android:defaultValue="false" />
+<!-- General -->
+<PreferenceCategory
+    android:title="General">
 
-        <SwitchPreferenceCompat
-            android:key="enable_multi_user"
-            android:title="Multi-User Mode"
-            android:summary="Enable multiple virtual user spaces"
-            android:defaultValue="true" />
-    </PreferenceCategory>
+    <SwitchPreferenceCompat
+        android:key="enable_gms"
+        android:title="@string/enable_gms"
+        android:summary="Google Mobile Services compatibility"
+        android:defaultValue="false" />
 
-    <PreferenceCategory android:title="Location">
-        <SwitchPreferenceCompat
-            android:key="enable_fake_location"
-            android:title="Fake Location"
-            android:summary="Override GPS for virtual apps"
-            android:defaultValue="false" />
-    </PreferenceCategory>
+    <SwitchPreferenceCompat
+        android:key="enable_multi_user"
+        android:title="Multi-User Mode"
+        android:summary="Enable multiple virtual user spaces"
+        android:defaultValue="true" />
 
-    <PreferenceCategory android:title="Device">
-        <SwitchPreferenceCompat
-            android:key="enable_device_spoof"
-            android:title="Device Spoofing"
-            android:summary="Fake device model/IMEI per app"
-            android:defaultValue="false" />
-    </PreferenceCategory>
+</PreferenceCategory>
 
-    <PreferenceCategory android:title="About">
+<!-- Location -->
+<PreferenceCategory
+    android:title="Location">
+
+    <SwitchPreferenceCompat
+        android:key="enable_fake_location"
+        android:title="@string/fake_location"
+        android:summary="Override GPS for virtual apps"
+        android:defaultValue="false" />
+
+</PreferenceCategory>
+
+<!-- Device -->
+<PreferenceCategory
+    android:title="Device">
+
+    <SwitchPreferenceCompat
+        android:key="enable_device_spoof"
+        android:title="Device Spoofing"
+        android:summary="Fake device model/IMEI per app"
+        android:defaultValue="false" />
+
+</PreferenceCategory>
+
+<!-- Virtual Engine -->
+<PreferenceCategory
+    android:title="@string/virtual_engine">
+
+    <SwitchPreferenceCompat
+        android:key="enable_daemon"
+        android:title="@string/daemon_title"
+        android:summary="@string/daemon_summary"
+        android:defaultValue="true" />
+
+    <SwitchPreferenceCompat
+        android:key="enable_root"
+        android:title="@string/root_title"
+        android:summary="@string/root_summary"
+        android:defaultValue="false" />
+
+</PreferenceCategory>
+
+<!-- About -->
+<PreferenceCategory
+    android:title="@string/about">
 
     <Preference
         android:key="version"
-        android:title="Version"
+        android:title="@string/version"
         android:summary="1.0.0" />
 
     <Preference
-        android:key="github"
-        android:title="<b>TeristaSpace</b>"
-        android:summary="This Virtual Space Develop By Terista" />
+        android:key="terista"
+        android:title="@string/terista_title"
+        android:summary="@string/terista_desc" />
 
 </PreferenceCategory>
+
 </PreferenceScreen>
