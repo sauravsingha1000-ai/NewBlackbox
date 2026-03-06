@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import top.niunaijun.blackboxa.bean.AppInfo
+import com.google.android.material.snackbar.Snackbar
 import top.niunaijun.blackboxa.databinding.ItemAppBinding
 
 class AppsAdapter(
