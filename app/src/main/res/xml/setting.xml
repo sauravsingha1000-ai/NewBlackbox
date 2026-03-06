@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?><PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-android:paddingBottom="48dp">
+android:padding="12dp">
 
 <PreferenceCategory android:title="General">
 
@@ -7,19 +7,19 @@ android:paddingBottom="48dp">
         android:key="enable_gms"
         android:title="Enable GMS"
         android:summary="Google Mobile Services compatibility"
-        android:defaultValue="false"/>
+        android:iconSpaceReserved="false"/>
 
     <SwitchPreferenceCompat
         android:key="enable_fake_location"
         android:title="Fake Location"
         android:summary="Override GPS for virtual apps"
-        android:defaultValue="false"/>
+        android:iconSpaceReserved="false"/>
 
     <SwitchPreferenceCompat
         android:key="enable_device_spoof"
         android:title="Device Spoofing"
         android:summary="Fake device model / IMEI per app"
-        android:defaultValue="false"/>
+        android:iconSpaceReserved="false"/>
 
 </PreferenceCategory>
 
@@ -30,13 +30,13 @@ android:paddingBottom="48dp">
         android:key="enable_daemon"
         android:title="Enable Daemon"
         android:summary="Keep virtual apps running in background"
-        android:defaultValue="false"/>
+        android:iconSpaceReserved="false"/>
 
     <SwitchPreferenceCompat
         android:key="enable_root"
         android:title="Enable Root Mode"
         android:summary="Allow root access inside virtual apps"
-        android:defaultValue="false"/>
+        android:iconSpaceReserved="false"/>
 
 </PreferenceCategory>
 
@@ -46,12 +46,14 @@ android:paddingBottom="48dp">
     <Preference
         android:key="version"
         android:title="Version"
-        android:summary="1.0.0"/>
+        android:summary="1.0.0"
+        android:iconSpaceReserved="false"/>
 
     <Preference
         android:key="terista"
         android:title="TeristaSpace"
-        android:summary="This virtual space is developed by Terista"/>
+        android:summary="This virtual space is developed by Terista"
+        android:iconSpaceReserved="false"/>
 
 </PreferenceCategory>
 
