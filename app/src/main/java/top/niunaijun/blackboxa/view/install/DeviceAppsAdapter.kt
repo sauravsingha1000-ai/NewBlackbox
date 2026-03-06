@@ -7,6 +7,7 @@ import top.niunaijun.blackboxa.databinding.ItemDeviceAppBinding
 
 class DeviceAppsAdapter(
 private val list: List<DeviceApp>,
+private val installedPackages: Set<String>,
 private val install: (String) -> Unit
 ) : RecyclerView.Adapter<DeviceAppsAdapter.Holder>() {
 
@@ -34,8 +35,20 @@ override fun onBindViewHolder(holder: Holder, position: Int) {
     holder.binding.tvName.text = app.name
     holder.binding.tvPackage.text = app.packageName
 
-    holder.itemView.setOnClickListener {
-        install(app.packageName)
+    val alreadyInstalled = installedPackages.contains(app.packageName)
+
+    if (alreadyInstalled) {
+        holder.binding.tvPackage.text =
+            "${app.packageName}  •  Already Installed"
+        holder.itemView.isEnabled = false
+        holder.itemView.alpha = 0.5f
+    } else {
+        holder.itemView.isEnabled = true
+        holder.itemView.alpha = 1f
+
+        holder.itemView.setOnClickListener {
+            install(app.packageName)
+        }
     }
 }
 
