@@ -18,10 +18,13 @@ class App : Application() {
     }
 
     override fun attachBaseContext(base: Context) {
-        // Set crash handler BEFORE BlackBox attaches (catches early native crashes)
+        // CRITICAL FIX: super.attachBaseContext MUST come first on Android 15
+        super.attachBaseContext(base)
+        
+        // NOW safe to setup crash handler (base is initialized)
         setupEarlyCrashHandler(base)
         
-        super.attachBaseContext(base)
+        // NOW safe to initialize BlackBox
         BlackBoxCore.get().doAttachBaseContext(base)
     }
 
@@ -40,53 +43,52 @@ class App : Application() {
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            
-            // Save to external files dir for easy Termux access
+            saveCrashLog(context, thread, throwable)
+            defaultHandler?.uncaughtException(thread, throwable)
+        }
+    }
+
+    private fun saveCrashLog(context: Context, thread: Thread, throwable: Throwable) {
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        
+        try {
             val crashDir = File(context.getExternalFilesDir(null), "early_crash")
             crashDir.mkdirs()
             
             val crashFile = File(crashDir, "crash_$timestamp.txt")
+            val report = buildCrashReport(thread, throwable)
             
-            val report = buildString {
-                appendLine("========= EARLY CRASH =========")
-                appendLine("Package: top.niunaijun.blackboxa")
-                appendLine("Time: ${Date()}")
-                appendLine("Thread: ${thread.name} (ID: ${thread.id})")
-                appendLine("Exception: ${throwable.javaClass.name}")
-                appendLine("Message: ${throwable.message}")
-                appendLine()
-                appendLine("--------- STACK TRACE ---------")
-                appendLine(throwable.stackTraceToString())
-                
-                // Cause chain
-                var cause = throwable.cause
-                while (cause != null) {
-                    appendLine()
-                    appendLine("Caused by: ${cause.javaClass.name}")
-                    appendLine(cause.stackTraceToString())
-                    cause = cause.cause
-                }
-                appendLine("========= END =========")
-            }
+            FileWriter(crashFile).use { it.write(report) }
+            Log.e("EarlyCrash", "Saved to: ${crashFile.absolutePath}")
             
-            // Write to file
+        } catch (e: Exception) {
+            // Fallback to sdcard root
             try {
-                FileWriter(crashFile).use { it.write(report) }
-                Log.e("EarlyCrash", "Saved to: ${crashFile.absolutePath}")
-            } catch (e: Exception) {
-                // Fallback to sdcard root
-                try {
-                    val fallback = File("/sdcard/blackboxa_crash_$timestamp.txt")
-                    FileWriter(fallback).use { it.write(report) }
-                    Log.e("EarlyCrash", "Fallback saved to: ${fallback.absolutePath}")
-                } catch (e2: Exception) {
-                    Log.e("EarlyCrash", "Failed to save crash log", e2)
-                }
-            }
+                File("/sdcard/blackboxa_crash_$timestamp.txt").writeText(
+                    buildCrashReport(thread, throwable)
+                )
+            } catch (ignored: Exception) {}
+        }
+    }
+
+    private fun buildCrashReport(thread: Thread, throwable: Throwable): String {
+        return buildString {
+            appendLine("========= EARLY CRASH =========")
+            appendLine("Time: ${Date()}")
+            appendLine("Thread: ${thread.name}")
+            appendLine("Exception: ${throwable.javaClass.name}")
+            appendLine("Message: ${throwable.message}")
+            appendLine()
+            appendLine(throwable.stackTraceToString())
             
-            // Call default handler
-            defaultHandler?.uncaughtException(thread, throwable)
+            var cause = throwable.cause
+            while (cause != null) {
+                appendLine()
+                appendLine("Caused by: ${cause.javaClass.name}")
+                appendLine(cause.stackTraceToString())
+                cause = cause.cause
+            }
+            appendLine("========= END =========")
         }
     }
 }
