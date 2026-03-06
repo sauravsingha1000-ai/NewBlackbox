@@ -12,83 +12,89 @@ import java.util.*
 
 class App : Application() {
 
-    companion object {
-        lateinit var instance: App
-            private set
+companion object {
+    lateinit var instance: App
+        private set
+}
+
+override fun attachBaseContext(base: Context) {
+    // MUST be first (important for Android 13+)
+    super.attachBaseContext(base)
+
+    // Setup early crash handler
+    setupEarlyCrashHandler(base)
+
+    // Initialize BlackBox with safe context
+    BlackBoxCore.get().doAttachBaseContext(base.applicationContext)
+}
+
+override fun onCreate() {
+    super.onCreate()
+
+    instance = this
+
+    // Enable main crash logger
+    CrashHandler.get().init(this)
+
+    // Initialize BlackBox
+    BlackBoxCore.get().doCreate(this)
+
+    // App manager init
+    AppManager.init(this)
+}
+
+private fun setupEarlyCrashHandler(context: Context) {
+    val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+
+    Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+        saveCrashLog(context.applicationContext, thread, throwable)
+        defaultHandler?.uncaughtException(thread, throwable)
     }
+}
 
-    override fun attachBaseContext(base: Context) {
-        // CRITICAL FIX: super.attachBaseContext MUST come first on Android 15
-        super.attachBaseContext(base)
-        
-        // NOW safe to setup crash handler (base is initialized)
-        setupEarlyCrashHandler(base)
-        
-        // NOW safe to initialize BlackBox
-        BlackBoxCore.get().doAttachBaseContext(base)
-    }
+private fun saveCrashLog(context: Context, thread: Thread, throwable: Throwable) {
+    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
 
-    override fun onCreate() {
-        super.onCreate()
-        instance = this
+    try {
+        val crashDir = File(context.getExternalFilesDir(null), "early_crash")
+        crashDir.mkdirs()
 
-        // Enable crash logger
-        CrashHandler.get().init(this)
+        val crashFile = File(crashDir, "crash_$timestamp.txt")
+        val report = buildCrashReport(thread, throwable)
 
-        BlackBoxCore.get().doCreate(this)
-        AppManager.init(this)
-    }
+        FileWriter(crashFile).use { it.write(report) }
 
-    private fun setupEarlyCrashHandler(context: Context) {
-        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
-        
-        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-            saveCrashLog(context, thread, throwable)
-            defaultHandler?.uncaughtException(thread, throwable)
-        }
-    }
+        Log.e("EarlyCrash", "Crash log saved: ${crashFile.absolutePath}")
 
-    private fun saveCrashLog(context: Context, thread: Thread, throwable: Throwable) {
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        
+    } catch (e: Exception) {
         try {
-            val crashDir = File(context.getExternalFilesDir(null), "early_crash")
-            crashDir.mkdirs()
-            
-            val crashFile = File(crashDir, "crash_$timestamp.txt")
-            val report = buildCrashReport(thread, throwable)
-            
-            FileWriter(crashFile).use { it.write(report) }
-            Log.e("EarlyCrash", "Saved to: ${crashFile.absolutePath}")
-            
-        } catch (e: Exception) {
-            // Fallback to sdcard root
-            try {
-                File("/sdcard/blackboxa_crash_$timestamp.txt").writeText(
-                    buildCrashReport(thread, throwable)
-                )
-            } catch (ignored: Exception) {}
+            File("/sdcard/blackboxa_crash_$timestamp.txt")
+                .writeText(buildCrashReport(thread, throwable))
+        } catch (_: Exception) {
         }
     }
+}
 
-    private fun buildCrashReport(thread: Thread, throwable: Throwable): String {
-        return buildString {
-            appendLine("========= EARLY CRASH =========")
-            appendLine("Time: ${Date()}")
-            appendLine("Thread: ${thread.name}")
-            appendLine("Exception: ${throwable.javaClass.name}")
-            appendLine("Message: ${throwable.message}")
+private fun buildCrashReport(thread: Thread, throwable: Throwable): String {
+    return buildString {
+        appendLine("========= EARLY CRASH =========")
+        appendLine("Time: ${Date()}")
+        appendLine("Thread: ${thread.name}")
+        appendLine("Exception: ${throwable.javaClass.name}")
+        appendLine("Message: ${throwable.message}")
+        appendLine()
+        appendLine(throwable.stackTraceToString())
+
+        var cause = throwable.cause
+        while (cause != null) {
             appendLine()
-            appendLine(throwable.stackTraceToString())
-            
-            var cause = throwable.cause
-            while (cause != null) {
-                appendLine()
-                appendLine("Caused by: ${cause.javaClass.name}")
-                appendLine(cause.stackTraceToString())
-                cause = cause.cause
-            }
-            appendLine("========= END =========")
+            appendLine("Caused by: ${cause.javaClass.name}")
+            appendLine(cause.stackTraceToString())
+            cause = cause.cause
         }
+
+        appendLine("========= END =========")
     }
+}
+
 }
