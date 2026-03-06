@@ -6,7 +6,9 @@ import android.content.pm.PackageManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import top.niunaijun.blackboxa.bean.AppInfo
 import top.niunaijun.blackboxa.data.AppsRepository
 
@@ -19,89 +21,200 @@ class AppsViewModel(application: Application) : AndroidViewModel(application) {
     val error = MutableLiveData<String>()
     val installResult = MutableLiveData<String>()
 
-    // ⭐ Device apps list
+    // Real device apps
     val deviceApps = MutableLiveData<List<ApplicationInfo>>()
 
+    /**
+     * Load apps installed inside virtual space
+     */
     fun loadApps(userId: Int = 0) {
+
         viewModelScope.launch {
+
             loading.postValue(true)
+
             try {
-                apps.postValue(repo.getInstalledApps(userId))
+
+                val list = withContext(Dispatchers.IO) {
+                    repo.getInstalledApps(userId)
+                }
+
+                apps.postValue(list)
+
             } catch (e: Exception) {
-                error.postValue(e.message)
+
+                error.postValue(e.message ?: "Failed to load apps")
+
             } finally {
+
                 loading.postValue(false)
             }
         }
     }
 
-    // ⭐ Load installed apps from real device
+    /**
+     * Load apps from real device
+     * System apps are automatically hidden
+     */
     fun loadDeviceApps() {
+
         viewModelScope.launch {
+
             try {
+
                 val pm = getApplication<Application>().packageManager
-                val list = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-                    .filter { pm.getLaunchIntentForPackage(it.packageName) != null }
+
+                val list = withContext(Dispatchers.IO) {
+
+                    pm.getInstalledApplications(PackageManager.GET_META_DATA)
+
+                        // Hide system apps
+                        .filter {
+                            it.flags and ApplicationInfo.FLAG_SYSTEM == 0
+                        }
+
+                        // Only apps with launcher
+                        .filter {
+                            pm.getLaunchIntentForPackage(it.packageName) != null
+                        }
+
+                        .sortedBy {
+                            it.loadLabel(pm).toString().lowercase()
+                        }
+                }
 
                 deviceApps.postValue(list)
 
             } catch (e: Exception) {
-                error.postValue(e.message)
+
+                error.postValue(e.message ?: "Failed to load device apps")
             }
         }
     }
 
+    /**
+     * Install APK from storage
+     * Prevent duplicate installs
+     */
     fun installApp(apkPath: String, userId: Int = 0) {
+
         viewModelScope.launch {
+
             loading.postValue(true)
+
             try {
-                val result = repo.installApp(apkPath, userId)
+
+                val pm = getApplication<Application>().packageManager
+
+                val pkgInfo = pm.getPackageArchiveInfo(apkPath, 0)
+
+                val packageName = pkgInfo?.packageName
+
+                if (packageName == null) {
+
+                    error.postValue("Invalid APK file")
+                    loading.postValue(false)
+                    return@launch
+                }
+
+                val installedApps = repo.getInstalledApps(userId)
+
+                if (installedApps.any { it.packageName == packageName }) {
+
+                    error.postValue("App already installed in TeristaSpace")
+                    loading.postValue(false)
+                    return@launch
+                }
+
+                val result = withContext(Dispatchers.IO) {
+                    repo.installApp(apkPath, userId)
+                }
 
                 if (result.success) {
+
                     installResult.postValue("Installed: ${result.packageName}")
+
                     loadApps(userId)
+
                 } else {
+
                     error.postValue("Install failed: ${result.message}")
                 }
 
             } catch (e: Exception) {
-                error.postValue(e.message)
+
+                error.postValue(e.message ?: "Installation error")
+
             } finally {
+
                 loading.postValue(false)
             }
         }
     }
 
-    // ⭐ Install from real device app
+    /**
+     * Install app from real device
+     */
     fun installFromDevice(packageName: String, userId: Int = 0) {
+
         viewModelScope.launch {
+
             try {
+
                 val pm = getApplication<Application>().packageManager
+
                 val info = pm.getApplicationInfo(packageName, 0)
 
                 val apkPath = info.sourceDir
+
                 installApp(apkPath, userId)
 
             } catch (e: Exception) {
-                error.postValue(e.message)
+
+                error.postValue(e.message ?: "Install from device failed")
             }
         }
     }
 
+    /**
+     * Uninstall virtual app
+     */
     fun uninstallApp(packageName: String, userId: Int = 0) {
+
         viewModelScope.launch {
+
             try {
-                repo.uninstallApp(packageName, userId)
+
+                withContext(Dispatchers.IO) {
+                    repo.uninstallApp(packageName, userId)
+                }
+
                 loadApps(userId)
+
             } catch (e: Exception) {
-                error.postValue(e.message)
+
+                error.postValue(e.message ?: "Uninstall failed")
             }
         }
     }
 
+    /**
+     * Launch virtual app
+     */
     fun launchApp(packageName: String, userId: Int = 0) {
+
         viewModelScope.launch {
-            repo.launchApp(packageName, userId)
+
+            try {
+
+                withContext(Dispatchers.IO) {
+                    repo.launchApp(packageName, userId)
+                }
+
+            } catch (e: Exception) {
+
+                error.postValue(e.message ?: "Launch failed")
+            }
         }
     }
 }
