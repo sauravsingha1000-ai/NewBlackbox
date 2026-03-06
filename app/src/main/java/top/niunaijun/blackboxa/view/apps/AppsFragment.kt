@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import top.niunaijun.blackboxa.databinding.FragmentAppsBinding
+import top.niunaijun.blackboxa.util.BundleInstaller
 import top.niunaijun.blackboxa.view.install.DeviceAppsActivity
 
 class AppsFragment : Fragment() {
@@ -84,7 +85,7 @@ class AppsFragment : Fragment() {
             showInstallOptions()
         }
 
-        // Observe installed virtual apps
+        // Observe apps
         viewModel.apps.observe(viewLifecycleOwner) {
             adapter.submitList(it)
         }
@@ -128,7 +129,6 @@ class AppsFragment : Fragment() {
                     0 -> {
                         val intent =
                             Intent(requireContext(), DeviceAppsActivity::class.java)
-
                         startActivity(intent)
                     }
 
@@ -141,7 +141,7 @@ class AppsFragment : Fragment() {
     }
 
     /**
-     * Install APK from storage
+     * Install APK or bundle package
      */
     private fun installFromUri(uri: Uri) {
 
@@ -157,27 +157,55 @@ class AppsFragment : Fragment() {
             null
         }
 
-        if (path != null) {
-
-            val fileName = uri.lastPathSegment ?: "package"
-
-            AlertDialog.Builder(requireContext())
-                .setTitle("Install Package")
-                .setMessage(fileName)
-                .setPositiveButton("Install") { _, _ ->
-                    viewModel.installApp(path)
-                }
-                .setNegativeButton("Cancel", null)
-                .show()
-
-        } else {
+        if (path == null) {
 
             Snackbar.make(binding.root, "Invalid file", Snackbar.LENGTH_LONG).show()
+            return
+        }
+
+        val type = BundleInstaller.detectType(path)
+
+        when (type) {
+
+            "APK" -> {
+
+                viewModel.installApp(path)
+            }
+
+            "APKS", "XAPK", "APKM" -> {
+
+                val folder =
+                    BundleInstaller.extractBundle(requireContext(), path)
+
+                if (folder == null) {
+
+                    Snackbar.make(binding.root, "Bundle extraction failed", Snackbar.LENGTH_LONG).show()
+                    return
+                }
+
+                val apkFiles = folder.listFiles { file ->
+                    file.extension.equals("apk", true)
+                }
+
+                if (!apkFiles.isNullOrEmpty()) {
+
+                    viewModel.installApp(apkFiles.first().absolutePath)
+
+                } else {
+
+                    Snackbar.make(binding.root, "No APK found in bundle", Snackbar.LENGTH_LONG).show()
+                }
+            }
+
+            else -> {
+
+                Snackbar.make(binding.root, "Unsupported file type", Snackbar.LENGTH_LONG).show()
+            }
         }
     }
 
     /**
-     * Drag & Drop launcher icons
+     * Drag & drop launcher icons
      */
     private fun enableDragAndDrop() {
 
