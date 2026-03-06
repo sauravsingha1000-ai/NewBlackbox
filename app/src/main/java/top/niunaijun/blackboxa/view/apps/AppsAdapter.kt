@@ -7,7 +7,6 @@ import android.widget.PopupMenu
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import top.niunaijun.blackboxa.R
 import top.niunaijun.blackboxa.bean.AppInfo
 import top.niunaijun.blackboxa.databinding.ItemAppBinding
 
@@ -21,10 +20,15 @@ private val onAppInfo: (AppInfo) -> Unit = {}
 
 companion object {
     private val DIFF = object : DiffUtil.ItemCallback<AppInfo>() {
-        override fun areItemsTheSame(a: AppInfo, b: AppInfo) =
-            a.packageName == b.packageName && a.userId == b.userId
 
-        override fun areContentsTheSame(a: AppInfo, b: AppInfo) = a == b
+        override fun areItemsTheSame(oldItem: AppInfo, newItem: AppInfo): Boolean {
+            return oldItem.packageName == newItem.packageName &&
+                    oldItem.userId == newItem.userId
+        }
+
+        override fun areContentsTheSame(oldItem: AppInfo, newItem: AppInfo): Boolean {
+            return oldItem == newItem
+        }
     }
 }
 
@@ -43,38 +47,43 @@ inner class ViewHolder(private val binding: ItemAppBinding)
             binding.ivIcon.setImageResource(android.R.drawable.sym_def_app_icon)
         }
 
-        binding.btnLaunch.setOnClickListener { onLaunch(app) }
-        binding.btnUninstall.setOnClickListener { onUninstall(app) }
+        binding.btnLaunch.setOnClickListener {
+            onLaunch(app)
+        }
 
-        // ⭐ LONG PRESS MENU
+        binding.btnUninstall.setOnClickListener {
+            onUninstall(app)
+        }
+
+        // Long press menu
         binding.root.setOnLongClickListener {
-            showMenu(it, app)
+            showPopupMenu(it, app)
             true
         }
     }
 
-    private fun showMenu(view: View, app: AppInfo) {
+    private fun showPopupMenu(view: View, app: AppInfo) {
         val popup = PopupMenu(view.context, view)
 
-        popup.menu.add("Launch")
-        popup.menu.add("Clone")
-        popup.menu.add("Clear Data")
-        popup.menu.add("App Info")
-        popup.menu.add("Uninstall")
+        popup.menu.add(0, 1, 0, "Launch")
+        popup.menu.add(0, 2, 1, "Clone")
+        popup.menu.add(0, 3, 2, "Clear Data")
+        popup.menu.add(0, 4, 3, "App Info")
+        popup.menu.add(0, 5, 4, "Uninstall")
 
         popup.setOnMenuItemClickListener {
 
-            when (it.title) {
+            when (it.itemId) {
 
-                "Launch" -> onLaunch(app)
+                1 -> onLaunch(app)
 
-                "Clone" -> onClone(app)
+                2 -> onClone(app)
 
-                "Clear Data" -> onClearData(app)
+                3 -> onClearData(app)
 
-                "App Info" -> onAppInfo(app)
+                4 -> onAppInfo(app)
 
-                "Uninstall" -> onUninstall(app)
+                5 -> onUninstall(app)
             }
 
             true
