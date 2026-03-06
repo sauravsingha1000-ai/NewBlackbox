@@ -19,8 +19,11 @@
     <!-- Navigation bar -->
     <item name="android:navigationBarColor">@color/colorBackground</item>
 
-    <!-- Improve toolbar title visibility -->
+    <!-- Toolbar style -->
     <item name="toolbarStyle">@style/Widget.MaterialComponents.Toolbar</item>
+
+    <!-- Preference screen theme (fix spacing + modern look) -->
+    <item name="preferenceTheme">@style/PreferenceThemeOverlay.Material</item>
 
     <!-- Fix faded settings text -->
     <item name="android:textColorPrimary">@color/black</item>
@@ -29,11 +32,19 @@
     <!-- Switch style -->
     <item name="switchStyle">@style/Widget.MaterialComponents.CompoundButton.Switch</item>
 
-</style><style name="Theme.NewBlackbox.Splash" parent="Theme.NewBlackbox">
+</style>
+
+
+<style name="Theme.NewBlackbox.Splash" parent="Theme.NewBlackbox">
     <item name="android:windowFullscreen">true</item>
     <item name="android:windowNoTitle">true</item>
-</style><style name="Theme.NewBlackbox.Translucent" parent="Theme.NewBlackbox">
+</style>
+
+
+<style name="Theme.NewBlackbox.Translucent" parent="Theme.NewBlackbox">
     <item name="android:windowIsTranslucent">true</item>
     <item name="android:windowBackground">@android:color/transparent</item>
     <item name="android:windowNoTitle">true</item>
-</style></resources>
+</style>
+
+</resources>
