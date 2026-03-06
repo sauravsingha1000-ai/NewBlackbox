@@ -13,28 +13,27 @@
     <!-- Background -->
     <item name="android:colorBackground">@color/colorBackground</item>
 
-    <!-- Status & navigation bar -->
+    <!-- Status bar -->
     <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+
+    <!-- Navigation bar -->
     <item name="android:navigationBarColor">@color/colorBackground</item>
 
-    <!-- Fix faded text in settings screen -->
+    <!-- Improve toolbar title visibility -->
+    <item name="toolbarStyle">@style/Widget.MaterialComponents.Toolbar</item>
+
+    <!-- Fix faded settings text -->
     <item name="android:textColorPrimary">@color/black</item>
     <item name="android:textColorSecondary">@color/black</item>
 
-    <!-- Better switch style -->
+    <!-- Switch style -->
     <item name="switchStyle">@style/Widget.MaterialComponents.CompoundButton.Switch</item>
 
-</style>
-
-<style name="Theme.NewBlackbox.Splash" parent="Theme.NewBlackbox">
+</style><style name="Theme.NewBlackbox.Splash" parent="Theme.NewBlackbox">
     <item name="android:windowFullscreen">true</item>
     <item name="android:windowNoTitle">true</item>
-</style>
-
-<style name="Theme.NewBlackbox.Translucent" parent="Theme.NewBlackbox">
+</style><style name="Theme.NewBlackbox.Translucent" parent="Theme.NewBlackbox">
     <item name="android:windowIsTranslucent">true</item>
     <item name="android:windowBackground">@android:color/transparent</item>
     <item name="android:windowNoTitle">true</item>
-</style>
-
-</resources>
+</style></resources>
