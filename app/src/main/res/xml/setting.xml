@@ -1,79 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?><PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:app="http://schemas.android.com/apk/res-auto">
+android:paddingBottom="48dp">
 
-<!-- General -->
-<PreferenceCategory
-    android:title="General">
+<PreferenceCategory android:title="General">
 
     <SwitchPreferenceCompat
         android:key="enable_gms"
-        android:title="@string/enable_gms"
+        android:title="Enable GMS"
         android:summary="Google Mobile Services compatibility"
-        android:defaultValue="false" />
-
-    <SwitchPreferenceCompat
-        android:key="enable_multi_user"
-        android:title="Multi-User Mode"
-        android:summary="Enable multiple virtual user spaces"
-        android:defaultValue="true" />
-
-</PreferenceCategory>
-
-<!-- Location -->
-<PreferenceCategory
-    android:title="Location">
+        android:defaultValue="false"/>
 
     <SwitchPreferenceCompat
         android:key="enable_fake_location"
-        android:title="@string/fake_location"
+        android:title="Fake Location"
         android:summary="Override GPS for virtual apps"
-        android:defaultValue="false" />
-
-</PreferenceCategory>
-
-<!-- Device -->
-<PreferenceCategory
-    android:title="Device">
+        android:defaultValue="false"/>
 
     <SwitchPreferenceCompat
         android:key="enable_device_spoof"
         android:title="Device Spoofing"
-        android:summary="Fake device model/IMEI per app"
-        android:defaultValue="false" />
+        android:summary="Fake device model / IMEI per app"
+        android:defaultValue="false"/>
 
 </PreferenceCategory>
 
-<!-- Virtual Engine -->
-<PreferenceCategory
-    android:title="@string/virtual_engine">
+
+<PreferenceCategory android:title="Virtual Engine">
 
     <SwitchPreferenceCompat
         android:key="enable_daemon"
-        android:title="@string/daemon_title"
-        android:summary="@string/daemon_summary"
-        android:defaultValue="true" />
+        android:title="Enable Daemon"
+        android:summary="Keep virtual apps running in background"
+        android:defaultValue="false"/>
 
     <SwitchPreferenceCompat
         android:key="enable_root"
-        android:title="@string/root_title"
-        android:summary="@string/root_summary"
-        android:defaultValue="false" />
+        android:title="Enable Root Mode"
+        android:summary="Allow root access inside virtual apps"
+        android:defaultValue="false"/>
 
 </PreferenceCategory>
 
-<!-- About -->
-<PreferenceCategory
-    android:title="@string/about">
+
+<PreferenceCategory android:title="About">
 
     <Preference
         android:key="version"
-        android:title="@string/version"
-        android:summary="1.0.0" />
+        android:title="Version"
+        android:summary="1.0.0"/>
 
     <Preference
         android:key="terista"
-        android:title="@string/terista_title"
-        android:summary="@string/terista_desc" />
+        android:title="TeristaSpace"
+        android:summary="This virtual space is developed by Terista"/>
 
 </PreferenceCategory>
 
