@@ -7,6 +7,8 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayoutMediator
 import top.niunaijun.blackboxa.R
@@ -16,55 +18,68 @@ import top.niunaijun.blackboxa.view.setting.SettingActivity
 
 class MainActivity : BaseActivity<ActivityMainBinding>() {
 
-    private lateinit var viewPagerAdapter: ViewPagerAdapter
+private lateinit var viewPagerAdapter: ViewPagerAdapter
 
-    private val requestPermission =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {}
+private val requestPermission =
+    registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {}
 
-    override fun getViewBinding() = ActivityMainBinding.inflate(layoutInflater)
+override fun getViewBinding() = ActivityMainBinding.inflate(layoutInflater)
 
-    override fun initView() {
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.title = getString(R.string.app_name)
+override fun initView() {
 
-        viewPagerAdapter = ViewPagerAdapter(this)
-        binding.viewPager.adapter = viewPagerAdapter
-        binding.viewPager.offscreenPageLimit = 2
-
-        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, pos ->
-            tab.text = viewPagerAdapter.getTitle(pos)
-        }.attach()
+    // Fix toolbar under status bar on some devices
+    ViewCompat.setOnApplyWindowInsetsListener(binding.toolbar) { view, insets ->
+        val statusBar = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+        view.setPadding(0, statusBar.top, 0, 0)
+        insets
     }
 
-    override fun initData() {
-        requestPermissions()
-    }
+    setSupportActionBar(binding.toolbar)
+    supportActionBar?.title = getString(R.string.app_name)
 
-    private fun requestPermissions() {
-        val perms = mutableListOf<String>()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            perms.add(Manifest.permission.READ_MEDIA_IMAGES)
-        } else {
-            perms.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-                perms.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            }
-        }
-        requestPermission.launch(perms.toTypedArray())
-    }
+    viewPagerAdapter = ViewPagerAdapter(this)
+    binding.viewPager.adapter = viewPagerAdapter
+    binding.viewPager.offscreenPageLimit = 2
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
-    }
+    TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, pos ->
+        tab.text = viewPagerAdapter.getTitle(pos)
+    }.attach()
+}
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_settings -> {
-                startActivity(Intent(this, SettingActivity::class.java))
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
+override fun initData() {
+    requestPermissions()
+}
+
+private fun requestPermissions() {
+    val perms = mutableListOf<String>()
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        perms.add(Manifest.permission.READ_MEDIA_IMAGES)
+    } else {
+        perms.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            perms.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
     }
+
+    requestPermission.launch(perms.toTypedArray())
+}
+
+override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    menuInflater.inflate(R.menu.menu_main, menu)
+    return true
+}
+
+override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    return when (item.itemId) {
+
+        R.id.action_settings -> {
+            startActivity(Intent(this, SettingActivity::class.java))
+            true
+        }
+
+        else -> super.onOptionsItemSelected(item)
+    }
+}
+
 }
