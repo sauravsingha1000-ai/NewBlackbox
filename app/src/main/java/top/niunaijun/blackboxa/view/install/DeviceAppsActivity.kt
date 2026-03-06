@@ -64,6 +64,9 @@ private fun loadApps() {
         allApps.add(deviceApp)
     }
 
+    // Sort apps alphabetically
+    allApps.sortBy { it.name.lowercase() }
+
     filteredApps.addAll(allApps)
 }
 
