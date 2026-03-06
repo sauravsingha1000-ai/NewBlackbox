@@ -1,16 +1,19 @@
 package top.niunaijun.blackboxa.view.apps
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import top.niunaijun.blackboxa.databinding.FragmentAppsBinding
+import top.niunaijun.blackboxa.view.install.DeviceAppsActivity
 
 class AppsFragment : Fragment() {
 
@@ -23,6 +26,7 @@ private val viewModel: AppsViewModel by viewModels {
 
 private lateinit var adapter: AppsAdapter
 
+// Storage picker
 private val pickApk =
     registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { installFromUri(it) }
@@ -49,9 +53,9 @@ override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 4)
     binding.recyclerView.adapter = adapter
 
-    // Install APK from storage
+    // Install button
     binding.fabAdd.setOnClickListener {
-        pickApk.launch("application/vnd.android.package-archive")
+        showInstallOptions()
     }
 
     viewModel.apps.observe(viewLifecycleOwner) {
@@ -72,7 +76,35 @@ override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     viewModel.loadApps()
 }
 
+// Install options dialog
+private fun showInstallOptions() {
+
+    val options = arrayOf(
+        "Install from Installed Apps",
+        "Install from Storage"
+    )
+
+    AlertDialog.Builder(requireContext())
+        .setTitle("Install App")
+        .setItems(options) { _, which ->
+
+            when (which) {
+
+                0 -> {
+                    val intent = Intent(requireContext(), DeviceAppsActivity::class.java)
+                    startActivity(intent)
+                }
+
+                1 -> {
+                    pickApk.launch("*/*")
+                }
+            }
+        }
+        .show()
+}
+
 private fun installFromUri(uri: Uri) {
+
     val path = try {
         requireContext()
             .contentResolver
