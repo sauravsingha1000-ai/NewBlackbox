@@ -33,13 +33,16 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="About">
-        <Preference
-            android:key="version"
-            android:title="Version"
-            android:summary="1.0.0" />
-        <Preference
-            android:key="github"
-            android:title="GitHub"
-            android:summary="https://github.com/ALEX5402/NewBlackbox" />
-    </PreferenceCategory>
+
+    <Preference
+        android:key="version"
+        android:title="Version"
+        android:summary="1.0.0" />
+
+    <Preference
+        android:key="github"
+        android:title="<b>TeristaSpace</b>"
+        android:summary="This Virtual Space Develop By Terista" />
+
+</PreferenceCategory>
 </PreferenceScreen>
