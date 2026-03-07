@@ -23,6 +23,9 @@ class AppsViewModel(application: Application) : AndroidViewModel(application) {
     val error = MutableLiveData<String>()
     val installResult = MutableLiveData<String>()
 
+    /**
+     * Load apps installed inside TeristaSpace
+     */
     fun loadApps(userId: Int = 0) {
 
         viewModelScope.launch {
@@ -31,7 +34,9 @@ class AppsViewModel(application: Application) : AndroidViewModel(application) {
 
             try {
 
-                val list = repo.getInstalledApps(userId)
+                val list = withContext(Dispatchers.IO) {
+                    repo.getInstalledApps(userId)
+                }
 
                 apps.postValue(list)
 
@@ -46,6 +51,9 @@ class AppsViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Load installed apps from the real device
+     */
     fun loadDeviceApps() {
 
         viewModelScope.launch {
@@ -58,14 +66,17 @@ class AppsViewModel(application: Application) : AndroidViewModel(application) {
 
                     pm.getInstalledApplications(PackageManager.GET_META_DATA)
 
+                        // hide system apps
                         .filter {
                             it.flags and ApplicationInfo.FLAG_SYSTEM == 0
                         }
 
+                        // only launchable apps
                         .filter {
                             pm.getLaunchIntentForPackage(it.packageName) != null
                         }
 
+                        // sort alphabetically
                         .sortedBy {
                             it.loadLabel(pm).toString().lowercase()
                         }
@@ -80,6 +91,9 @@ class AppsViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Install APK from storage
+     */
     fun installApp(apkPath: String, userId: Int = 0) {
 
         viewModelScope.launch {
@@ -90,7 +104,9 @@ class AppsViewModel(application: Application) : AndroidViewModel(application) {
 
                 val pm = getApplication<Application>().packageManager
 
-                val pkgInfo = pm.getPackageArchiveInfo(apkPath, 0)
+                val pkgInfo = withContext(Dispatchers.IO) {
+                    pm.getPackageArchiveInfo(apkPath, 0)
+                }
 
                 val packageName = pkgInfo?.packageName
 
@@ -100,7 +116,10 @@ class AppsViewModel(application: Application) : AndroidViewModel(application) {
                     return@launch
                 }
 
-                val installedApps = repo.getInstalledApps(userId)
+                // prevent duplicate installs
+                val installedApps = withContext(Dispatchers.IO) {
+                    repo.getInstalledApps(userId)
+                }
 
                 if (installedApps.any { it.packageName == packageName }) {
 
@@ -108,7 +127,9 @@ class AppsViewModel(application: Application) : AndroidViewModel(application) {
                     return@launch
                 }
 
-                val result = repo.installApp(apkPath, userId)
+                val result = withContext(Dispatchers.IO) {
+                    repo.installApp(apkPath, userId)
+                }
 
                 if (result.success) {
 
@@ -132,6 +153,9 @@ class AppsViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Install app from real device
+     */
     fun installFromDevice(packageName: String, userId: Int = 0) {
 
         viewModelScope.launch {
@@ -140,7 +164,9 @@ class AppsViewModel(application: Application) : AndroidViewModel(application) {
 
                 val pm = getApplication<Application>().packageManager
 
-                val info = pm.getApplicationInfo(packageName, 0)
+                val info = withContext(Dispatchers.IO) {
+                    pm.getApplicationInfo(packageName, 0)
+                }
 
                 installApp(info.sourceDir, userId)
 
@@ -151,13 +177,18 @@ class AppsViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Uninstall virtual app
+     */
     fun uninstallApp(packageName: String, userId: Int = 0) {
 
         viewModelScope.launch {
 
             try {
 
-                repo.uninstallApp(packageName, userId)
+                withContext(Dispatchers.IO) {
+                    repo.uninstallApp(packageName, userId)
+                }
 
                 loadApps(userId)
 
@@ -168,13 +199,18 @@ class AppsViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Launch virtual app
+     */
     fun launchApp(packageName: String, userId: Int = 0) {
 
         viewModelScope.launch {
 
             try {
 
-                repo.launchApp(packageName, userId)
+                withContext(Dispatchers.IO) {
+                    repo.launchApp(packageName, userId)
+                }
 
             } catch (e: Exception) {
 
