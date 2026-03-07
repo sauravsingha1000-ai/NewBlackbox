@@ -64,6 +64,12 @@
             android:name=".view.setting.SettingActivity"
             android:exported="false" />
 
+        <!-- NEW: Device Apps Installer Screen -->
+        <activity
+            android:name=".view.install.DeviceAppsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.NewBlackbox" />
+
         <activity
             android:name=".view.main.ShortcutActivity"
             android:exported="true"
@@ -74,9 +80,13 @@
             android:authorities="${applicationId}.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
+
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
+
         </provider>
+
     </application>
+
 </manifest>
