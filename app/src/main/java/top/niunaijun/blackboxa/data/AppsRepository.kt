@@ -54,7 +54,6 @@ class AppsRepository(private val context: Context) {
 
     /**
      * Install APK into virtual space
-     * Prevent duplicate installs
      */
     suspend fun installApp(apkPath: String, userId: Int = 0) =
         withContext(Dispatchers.IO) {
