@@ -7,8 +7,8 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -37,10 +37,9 @@ class DeviceAppsActivity : AppCompatActivity() {
         val installedPackages = BlackBoxCore.get()
             .getInstalledApps(0)
             .map { it.packageName }
-            .toSet()
+            .toMutableSet()
 
         adapter = DeviceAppsAdapter(filteredApps, installedPackages) { packageName ->
-
             installApp(packageName)
         }
 
@@ -56,54 +55,54 @@ class DeviceAppsActivity : AppCompatActivity() {
 
         binding.progressBar.visibility = View.VISIBLE
 
-        CoroutineScope(Dispatchers.IO).launch {
+        lifecycleScope.launch {
 
             try {
 
-                val pm = packageManager
-                val info = pm.getApplicationInfo(packageName, 0)
+                val apkPath = withContext(Dispatchers.IO) {
 
-                val apkPath = info.sourceDir
+                    val pm = packageManager
+                    val info = pm.getApplicationInfo(packageName, 0)
 
-                val result = BlackBoxCore.get()
-                    .installPackageAsUser(apkPath, 0)
+                    info.sourceDir
+                }
 
-                withContext(Dispatchers.Main) {
+                val result = withContext(Dispatchers.IO) {
 
-                    binding.progressBar.visibility = View.GONE
+                    BlackBoxCore.get()
+                        .installPackageAsUser(apkPath, 0)
+                }
 
-                    if (result.success) {
+                binding.progressBar.visibility = View.GONE
 
-                        Toast.makeText(
-                            this@DeviceAppsActivity,
-                            "Installed successfully",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                if (result.success) {
 
-                        finish()
+                    Toast.makeText(
+                        this@DeviceAppsActivity,
+                        "Installed successfully",
+                        Toast.LENGTH_SHORT
+                    ).show()
 
-                    } else {
+                    adapter.markInstalled(packageName)
 
-                        Toast.makeText(
-                            this@DeviceAppsActivity,
-                            "Install failed: ${result.message}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
+                } else {
+
+                    Toast.makeText(
+                        this@DeviceAppsActivity,
+                        "Install failed: ${result.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
 
             } catch (e: Exception) {
 
-                withContext(Dispatchers.Main) {
+                binding.progressBar.visibility = View.GONE
 
-                    binding.progressBar.visibility = View.GONE
-
-                    Toast.makeText(
-                        this@DeviceAppsActivity,
-                        "Install error",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+                Toast.makeText(
+                    this@DeviceAppsActivity,
+                    "Install error: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
@@ -118,7 +117,6 @@ class DeviceAppsActivity : AppCompatActivity() {
 
         packages.forEach { app ->
 
-            // hide system apps
             if ((app.flags and ApplicationInfo.FLAG_SYSTEM) != 0) return@forEach
 
             val label = pm.getApplicationLabel(app).toString()
@@ -129,7 +127,6 @@ class DeviceAppsActivity : AppCompatActivity() {
             allApps.add(deviceApp)
         }
 
-        // sort alphabetically
         allApps.sortBy { it.name.lowercase() }
 
         filteredApps.addAll(allApps)
