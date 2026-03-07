@@ -1,16 +1,20 @@
-<?xml version="1.0" encoding="utf-8"?><menu xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:app="http://schemas.android.com/apk/res-auto"><!-- Storage button -->
-<item
-    android:id="@+id/action_storage"
-    android:title="Storage"
-    android:icon="@android:drawable/ic_menu_upload"
-    app:showAsAction="ifRoom"/>
+<?xml version="1.0" encoding="utf-8"?>
 
-<!-- Settings button -->
-<item
-    android:id="@+id/action_settings"
-    android:title="@string/action_settings"
-    android:icon="@drawable/ic_settings"
-    app:showAsAction="ifRoom"/>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Storage -->
+    <item
+        android:id="@+id/action_storage"
+        android:title="Storage"
+        android:icon="@android:drawable/ic_menu_upload"
+        app:showAsAction="always"/>
+
+    <!-- Settings -->
+    <item
+        android:id="@+id/action_settings"
+        android:title="@string/action_settings"
+        android:icon="@drawable/ic_settings"
+        app:showAsAction="always"/>
 
 </menu>
