@@ -77,16 +77,43 @@ class AppsRepository(private val context: Context) {
         }
 
     /**
-     * Install from device app
+     * Install from device app (supports split APKs)
      */
     suspend fun installFromDevice(packageName: String, userId: Int = 0) =
         withContext(Dispatchers.IO) {
 
             val pm = context.packageManager
-
             val info = pm.getApplicationInfo(packageName, 0)
 
-            installApp(info.sourceDir, userId)
+            val apkPaths = mutableListOf<String>()
+
+            // base APK
+            apkPaths.add(info.sourceDir)
+
+            // split APKs (important for modern apps)
+            info.splitSourceDirs?.let {
+                apkPaths.addAll(it)
+            }
+
+            val core = BlackBoxCore.get()
+
+            var resultMessage = ""
+            var success = true
+
+            apkPaths.forEach { apk ->
+
+                val result = core.installPackageAsUser(apk, userId)
+
+                if (!result.success) {
+                    success = false
+                    resultMessage = result.message ?: "Install failed"
+                    return@forEach
+                }
+            }
+
+            if (!success) {
+                throw RuntimeException(resultMessage)
+            }
         }
 
     /**
