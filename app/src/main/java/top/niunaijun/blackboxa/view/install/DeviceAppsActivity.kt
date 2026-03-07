@@ -59,23 +59,46 @@ class DeviceAppsActivity : AppCompatActivity() {
 
             try {
 
-                val apkPath = withContext(Dispatchers.IO) {
+                val apkPaths = withContext(Dispatchers.IO) {
 
                     val pm = packageManager
                     val info = pm.getApplicationInfo(packageName, 0)
 
-                    info.sourceDir
+                    val paths = mutableListOf<String>()
+
+                    // base APK
+                    paths.add(info.sourceDir)
+
+                    // split APKs (important for modern apps)
+                    info.splitSourceDirs?.let {
+                        paths.addAll(it)
+                    }
+
+                    paths
                 }
 
-                val result = withContext(Dispatchers.IO) {
+                var installResult = true
+                var errorMessage = ""
 
-                    BlackBoxCore.get()
-                        .installPackageAsUser(apkPath, 0)
+                withContext(Dispatchers.IO) {
+
+                    apkPaths.forEach { apk ->
+
+                        val result = BlackBoxCore.get()
+                            .installPackageAsUser(apk, 0)
+
+                        if (!result.success) {
+
+                            installResult = false
+                            errorMessage = result.message ?: "Unknown error"
+                            return@forEach
+                        }
+                    }
                 }
 
                 binding.progressBar.visibility = View.GONE
 
-                if (result.success) {
+                if (installResult) {
 
                     Toast.makeText(
                         this@DeviceAppsActivity,
@@ -89,7 +112,7 @@ class DeviceAppsActivity : AppCompatActivity() {
 
                     Toast.makeText(
                         this@DeviceAppsActivity,
-                        "Install failed: ${result.message}",
+                        "Install failed: $errorMessage",
                         Toast.LENGTH_LONG
                     ).show()
                 }
