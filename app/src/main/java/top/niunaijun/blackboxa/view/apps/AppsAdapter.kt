@@ -34,8 +34,9 @@ class AppsAdapter(
         }
     }
 
-    inner class ViewHolder(private val binding: ItemAppBinding)
-        : RecyclerView.ViewHolder(binding.root) {
+    inner class ViewHolder(
+        private val binding: ItemAppBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(app: AppInfo) {
 
@@ -49,17 +50,14 @@ class AppsAdapter(
                 binding.ivIcon.setImageResource(android.R.drawable.sym_def_app_icon)
             }
 
-            // Launch button
             binding.btnLaunch.setOnClickListener {
                 onLaunch(app)
             }
 
-            // Uninstall button
             binding.btnUninstall.setOnClickListener {
                 confirmUninstall(app)
             }
 
-            // Long press popup menu
             binding.root.setOnLongClickListener {
                 showPopupMenu(it, app)
                 true
@@ -70,7 +68,7 @@ class AppsAdapter(
 
             AlertDialog.Builder(binding.root.context)
                 .setTitle("Uninstall App")
-                .setMessage("Remove ${app.appName} from virtual space?")
+                .setMessage("Remove ${app.appName} from TeristaSpace?")
                 .setPositiveButton("Uninstall") { _, _ ->
                     onUninstall(app)
                 }
