@@ -10,19 +10,13 @@ object BundleInstaller {
 
     private const val TAG = "BundleInstaller"
 
-    /**
-     * Detect bundle type
-     */
     fun detectType(path: String): String {
 
         return when {
 
             path.endsWith(".apk", true) -> "APK"
-
             path.endsWith(".apks", true) -> "APKS"
-
             path.endsWith(".xapk", true) -> "XAPK"
-
             path.endsWith(".apkm", true) -> "APKM"
 
             else -> "UNKNOWN"
@@ -30,18 +24,14 @@ object BundleInstaller {
     }
 
     /**
-     * Extract bundle packages (APKS / XAPK / APKM)
+     * Extract bundle safely
      */
     fun extractBundle(context: Context, path: String): File? {
 
         return try {
 
-            val outputDir = File(
-                context.getExternalFilesDir(null),
-                "bundle_temp"
-            )
+            val outputDir = File(context.cacheDir, "bundle_temp")
 
-            // Clean previous extraction
             if (outputDir.exists()) {
                 outputDir.deleteRecursively()
             }
@@ -54,9 +44,8 @@ object BundleInstaller {
 
                 val file = File(outputDir, entry.name)
 
-                // Security check (Zip Slip protection)
                 if (!file.canonicalPath.startsWith(outputDir.canonicalPath)) {
-                    throw SecurityException("Zip path traversal detected")
+                    throw SecurityException("Zip traversal detected")
                 }
 
                 if (entry.isDirectory) {
@@ -68,9 +57,7 @@ object BundleInstaller {
                     file.parentFile?.mkdirs()
 
                     zip.getInputStream(entry).use { input ->
-
                         FileOutputStream(file).use { output ->
-
                             input.copyTo(output)
                         }
                     }
@@ -79,15 +66,95 @@ object BundleInstaller {
 
             zip.close()
 
-            Log.d(TAG, "Bundle extracted to: ${outputDir.absolutePath}")
-
             outputDir
 
         } catch (e: Exception) {
 
-            Log.e(TAG, "Extraction failed", e)
+            Log.e(TAG, "Bundle extraction failed", e)
 
             null
+        }
+    }
+
+    /**
+     * Find all APK files (base + splits)
+     */
+    fun findApkFiles(folder: File): List<File> {
+
+        val list = mutableListOf<File>()
+
+        folder.walkTopDown().forEach {
+
+            if (it.isFile && it.extension.equals("apk", true)) {
+
+                list.add(it)
+            }
+        }
+
+        return list
+    }
+
+    /**
+     * Auto detect base APK
+     */
+    fun findBaseApk(apkFiles: List<File>): File? {
+
+        apkFiles.forEach {
+
+            if (it.name.equals("base.apk", true)) {
+
+                return it
+            }
+        }
+
+        return apkFiles.firstOrNull()
+    }
+
+    /**
+     * Detect split APK files
+     */
+    fun findSplitApks(apkFiles: List<File>): List<File> {
+
+        return apkFiles.filter {
+
+            it.name.startsWith("split") ||
+            it.name.contains("config", true)
+        }
+    }
+
+    /**
+     * Extract OBB files (XAPK games)
+     */
+    fun extractObb(context: Context, bundleDir: File) {
+
+        try {
+
+            val obbFiles = bundleDir.walkTopDown().filter {
+
+                it.extension.equals("obb", true)
+
+            }.toList()
+
+            if (obbFiles.isEmpty()) return
+
+            val obbRoot = File(context.getExternalFilesDir(null), "obb")
+
+            if (!obbRoot.exists()) {
+                obbRoot.mkdirs()
+            }
+
+            obbFiles.forEach { obb ->
+
+                val target = File(obbRoot, obb.name)
+
+                obb.copyTo(target, overwrite = true)
+
+                Log.d(TAG, "OBB copied: ${target.absolutePath}")
+            }
+
+        } catch (e: Exception) {
+
+            Log.e(TAG, "OBB extraction failed", e)
         }
     }
 }
