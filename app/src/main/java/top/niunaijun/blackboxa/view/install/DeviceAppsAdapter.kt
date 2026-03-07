@@ -7,7 +7,7 @@ import top.niunaijun.blackboxa.databinding.ItemDeviceAppBinding
 
 class DeviceAppsAdapter(
     private val list: List<DeviceApp>,
-    private val installedPackages: Set<String>,
+    private val installedPackages: MutableSet<String>,
     private val install: (String) -> Unit
 ) : RecyclerView.Adapter<DeviceAppsAdapter.Holder>() {
 
@@ -33,7 +33,6 @@ class DeviceAppsAdapter(
 
         holder.binding.ivIcon.setImageDrawable(app.icon)
         holder.binding.tvName.text = app.name
-        holder.binding.tvPackage.text = app.packageName
 
         val alreadyInstalled = installedPackages.contains(app.packageName)
 
@@ -48,6 +47,8 @@ class DeviceAppsAdapter(
 
         } else {
 
+            holder.binding.tvPackage.text = app.packageName
+
             holder.itemView.alpha = 1f
             holder.itemView.isClickable = true
 
@@ -56,5 +57,15 @@ class DeviceAppsAdapter(
                 install(app.packageName)
             }
         }
+    }
+
+    /**
+     * Mark app as installed after installation
+     */
+    fun markInstalled(packageName: String) {
+
+        installedPackages.add(packageName)
+
+        notifyDataSetChanged()
     }
 }
