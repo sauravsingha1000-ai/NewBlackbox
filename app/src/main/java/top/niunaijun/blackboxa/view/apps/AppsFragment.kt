@@ -31,7 +31,7 @@ class AppsFragment : Fragment() {
     private lateinit var adapter: AppsAdapter
     private var fullList = listOf<AppInfo>()
 
-    // Storage picker (used from toolbar)
+    // Storage picker
     private val pickApk =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             uri?.let { installFromUri(it) }
@@ -42,7 +42,6 @@ class AppsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
         _binding = FragmentAppsBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -52,72 +51,68 @@ class AppsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         adapter = AppsAdapter(
-
-            onLaunch = { app ->
-                viewModel.launchApp(app.packageName)
-            },
-
-            onUninstall = { app ->
-                viewModel.uninstallApp(app.packageName)
-            },
-
+            onLaunch = { app -> viewModel.launchApp(app.packageName) },
+            onUninstall = { app -> viewModel.uninstallApp(app.packageName) },
             onClone = { app ->
                 Snackbar.make(binding.root, "Clone ${app.appName}", Snackbar.LENGTH_SHORT).show()
             },
-
             onClearData = { app ->
                 Snackbar.make(binding.root, "Clear data for ${app.appName}", Snackbar.LENGTH_SHORT).show()
             },
-
             onAppInfo = { app ->
                 Snackbar.make(binding.root, app.packageName, Snackbar.LENGTH_LONG).show()
             }
         )
 
-        binding.recyclerView.layoutManager =
-            GridLayoutManager(requireContext(), 4)
-
+        binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 4)
         binding.recyclerView.adapter = adapter
 
         enableDragAndDrop()
 
-        // Install button → open device apps list
+        // Install button → open installed apps screen
         binding.fabAdd.setOnClickListener {
 
-            val intent = Intent(
-                requireContext(),
-                DeviceAppsActivity::class.java
-            )
+            try {
 
-            startActivity(intent)
+                val intent = Intent(
+                    requireContext(),
+                    DeviceAppsActivity::class.java
+                )
+
+                startActivity(intent)
+
+            } catch (e: Exception) {
+
+                Snackbar.make(
+                    binding.root,
+                    "Unable to open installer",
+                    Snackbar.LENGTH_LONG
+                ).show()
+            }
         }
 
         setupSearch()
 
         viewModel.apps.observe(viewLifecycleOwner) {
-
             fullList = it
             adapter.submitList(it)
         }
 
         viewModel.loading.observe(viewLifecycleOwner) {
-
             binding.progressBar.visibility =
                 if (it) View.VISIBLE else View.GONE
         }
 
         viewModel.error.observe(viewLifecycleOwner) { msg ->
-
             if (!msg.isNullOrEmpty()) {
-
+                binding.progressBar.visibility = View.GONE
                 Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
             }
         }
 
         viewModel.installResult.observe(viewLifecycleOwner) { msg ->
-
+            binding.progressBar.visibility = View.GONE
             if (!msg.isNullOrEmpty()) {
-
                 Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
             }
         }
@@ -139,7 +134,6 @@ class AppsFragment : Fragment() {
                 val query = s.toString().lowercase()
 
                 val filtered = fullList.filter {
-
                     it.appName.lowercase().contains(query)
                 }
 
@@ -155,6 +149,8 @@ class AppsFragment : Fragment() {
      */
     private fun installFromUri(uri: Uri) {
 
+        binding.progressBar.visibility = View.VISIBLE
+
         val path = try {
 
             requireContext()
@@ -163,13 +159,14 @@ class AppsFragment : Fragment() {
                 ?.use { "/proc/self/fd/${it.fd}" }
 
         } catch (e: Exception) {
-
             null
         }
 
         if (path == null) {
 
-            Snackbar.make(binding.root, "Invalid file", Snackbar.LENGTH_LONG).show()
+            binding.progressBar.visibility = View.GONE
+
+            Snackbar.make(binding.root, "Invalid APK file", Snackbar.LENGTH_LONG).show()
             return
         }
 
@@ -182,7 +179,6 @@ class AppsFragment : Fragment() {
     private fun enableDragAndDrop() {
 
         val callback = object : ItemTouchHelper.SimpleCallback(
-
             ItemTouchHelper.UP or
                     ItemTouchHelper.DOWN or
                     ItemTouchHelper.LEFT or
@@ -216,7 +212,6 @@ class AppsFragment : Fragment() {
     }
 
     override fun onDestroyView() {
-
         super.onDestroyView()
         _binding = null
     }
