@@ -3,6 +3,8 @@ package top.niunaijun.blackboxa.view.apps
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,6 +30,8 @@ class AppsFragment : Fragment() {
     }
 
     private lateinit var adapter: AppsAdapter
+
+    private var fullList = listOf<top.niunaijun.blackboxa.bean.AppInfo>()
 
     // Storage picker
     private val pickApk =
@@ -72,7 +76,6 @@ class AppsFragment : Fragment() {
             }
         )
 
-        // Grid launcher
         binding.recyclerView.layoutManager =
             GridLayoutManager(requireContext(), 4)
 
@@ -80,29 +83,36 @@ class AppsFragment : Fragment() {
 
         enableDragAndDrop()
 
-        // Install button
         binding.fabAdd.setOnClickListener {
             showInstallOptions()
         }
 
-        // Observe apps
+        setupSearch()
+
         viewModel.apps.observe(viewLifecycleOwner) {
+
+            fullList = it
             adapter.submitList(it)
         }
 
         viewModel.loading.observe(viewLifecycleOwner) {
+
             binding.progressBar.visibility =
                 if (it) View.VISIBLE else View.GONE
         }
 
         viewModel.error.observe(viewLifecycleOwner) { msg ->
+
             if (!msg.isNullOrEmpty()) {
+
                 Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
             }
         }
 
         viewModel.installResult.observe(viewLifecycleOwner) { msg ->
+
             if (!msg.isNullOrEmpty()) {
+
                 Snackbar.make(binding.root, msg, Snackbar.LENGTH_LONG).show()
             }
         }
@@ -111,11 +121,37 @@ class AppsFragment : Fragment() {
     }
 
     /**
+     * Search launcher apps
+     */
+    private fun setupSearch() {
+
+        binding.searchApps?.addTextChangedListener(object : TextWatcher {
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+
+                val query = s.toString().lowercase()
+
+                val filtered = fullList.filter {
+
+                    it.appName.lowercase().contains(query)
+                }
+
+                adapter.submitList(filtered)
+            }
+
+            override fun afterTextChanged(s: Editable?) {}
+        })
+    }
+
+    /**
      * Install dialog
      */
     private fun showInstallOptions() {
 
         val options = arrayOf(
+
             "Install from Installed Apps",
             "Install APK / APKS / XAPK / APKM"
         )
@@ -127,12 +163,15 @@ class AppsFragment : Fragment() {
                 when (which) {
 
                     0 -> {
+
                         val intent =
                             Intent(requireContext(), DeviceAppsActivity::class.java)
+
                         startActivity(intent)
                     }
 
                     1 -> {
+
                         pickApk.launch("*/*")
                     }
                 }
@@ -224,8 +263,8 @@ class AppsFragment : Fragment() {
                 target: RecyclerView.ViewHolder
             ): Boolean {
 
-                val from = viewHolder.adapterPosition
-                val to = target.adapterPosition
+                val from = viewHolder.bindingAdapterPosition
+                val to = target.bindingAdapterPosition
 
                 val list = adapter.currentList.toMutableList()
 
