@@ -1,41 +1,59 @@
-<?xml version="1.0" encoding="utf-8"?><androidx.coordinatorlayout.widget.CoordinatorLayout
-xmlns:android="http://schemas.android.com/apk/res/android"
-xmlns:app="http://schemas.android.com/apk/res-auto"
-android:layout_width="match_parent"
-android:layout_height="match_parent"
-android:background="@color/colorBackground">
+<?xml version="1.0" encoding="utf-8"?>
 
-<androidx.recyclerview.widget.RecyclerView
-android:id="@+id/recyclerView"
-android:layout_width="match_parent"
-android:layout_height="match_parent"
-android:clipToPadding="false"
-android:paddingStart="12dp"
-android:paddingEnd="12dp"
-android:paddingTop="12dp"
-android:paddingBottom="120dp"
-app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBackground">
 
-<ProgressBar
-android:id="@+id/progressBar"
-android:layout_width="wrap_content"
-android:layout_height="wrap_content"
-android:layout_gravity="center"
-android:visibility="gone"/>
+    <!-- Search bar -->
+    <EditText
+        android:id="@+id/searchApps"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="12dp"
+        android:hint="Search apps"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:background="@android:drawable/editbox_background"
+        android:drawableStart="@android:drawable/ic_menu_search"/>
 
-<com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-android:id="@+id/fabAdd"
-android:layout_width="wrap_content"
-android:layout_height="wrap_content"
-android:text="Install App"
-android:textStyle="bold"
-android:layout_marginEnd="20dp"
-android:layout_marginBottom="80dp"
-android:layout_gravity="bottom|end"
-app:icon="@android:drawable/ic_input_add"
-app:backgroundTint="?attr/colorPrimary"
-app:iconTint="@android:color/white"
-android:textColor="@android:color/white"
-app:elevation="8dp"/>
+    <!-- Apps grid -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="72dp"
+        android:clipToPadding="false"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="120dp"/>
+
+    <!-- Loading -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"/>
+
+    <!-- Install button -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fabAdd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Install App"
+        android:textStyle="bold"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="80dp"
+        android:layout_gravity="bottom|end"
+        app:icon="@android:drawable/ic_input_add"
+        app:backgroundTint="?attr/colorPrimary"
+        app:iconTint="@android:color/white"
+        android:textColor="@android:color/white"
+        app:elevation="8dp"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
