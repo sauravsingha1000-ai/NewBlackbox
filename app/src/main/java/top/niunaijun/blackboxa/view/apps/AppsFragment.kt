@@ -9,15 +9,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
+import top.niunaijun.blackboxa.bean.AppInfo
 import top.niunaijun.blackboxa.databinding.FragmentAppsBinding
-import top.niunaijun.blackboxa.util.BundleInstaller
 import top.niunaijun.blackboxa.view.install.DeviceAppsActivity
 
 class AppsFragment : Fragment() {
@@ -30,10 +29,9 @@ class AppsFragment : Fragment() {
     }
 
     private lateinit var adapter: AppsAdapter
+    private var fullList = listOf<AppInfo>()
 
-    private var fullList = listOf<top.niunaijun.blackboxa.bean.AppInfo>()
-
-    // Storage picker
+    // Storage picker (used from toolbar)
     private val pickApk =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
             uri?.let { installFromUri(it) }
@@ -83,8 +81,15 @@ class AppsFragment : Fragment() {
 
         enableDragAndDrop()
 
+        // Install button → open device apps list
         binding.fabAdd.setOnClickListener {
-            showInstallOptions()
+
+            val intent = Intent(
+                requireContext(),
+                DeviceAppsActivity::class.java
+            )
+
+            startActivity(intent)
         }
 
         setupSearch()
@@ -121,11 +126,11 @@ class AppsFragment : Fragment() {
     }
 
     /**
-     * Search launcher apps
+     * Search installed apps
      */
     private fun setupSearch() {
 
-        binding.searchApps?.addTextChangedListener(object : TextWatcher {
+        binding.searchApps.addTextChangedListener(object : TextWatcher {
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
@@ -146,41 +151,7 @@ class AppsFragment : Fragment() {
     }
 
     /**
-     * Install dialog
-     */
-    private fun showInstallOptions() {
-
-        val options = arrayOf(
-
-            "Install from Installed Apps",
-            "Install APK / APKS / XAPK / APKM"
-        )
-
-        AlertDialog.Builder(requireContext())
-            .setTitle("Install App")
-            .setItems(options) { _, which ->
-
-                when (which) {
-
-                    0 -> {
-
-                        val intent =
-                            Intent(requireContext(), DeviceAppsActivity::class.java)
-
-                        startActivity(intent)
-                    }
-
-                    1 -> {
-
-                        pickApk.launch("*/*")
-                    }
-                }
-            }
-            .show()
-    }
-
-    /**
-     * Install APK or bundle package
+     * Install APK from storage
      */
     private fun installFromUri(uri: Uri) {
 
@@ -202,45 +173,7 @@ class AppsFragment : Fragment() {
             return
         }
 
-        val type = BundleInstaller.detectType(path)
-
-        when (type) {
-
-            "APK" -> {
-
-                viewModel.installApp(path)
-            }
-
-            "APKS", "XAPK", "APKM" -> {
-
-                val folder =
-                    BundleInstaller.extractBundle(requireContext(), path)
-
-                if (folder == null) {
-
-                    Snackbar.make(binding.root, "Bundle extraction failed", Snackbar.LENGTH_LONG).show()
-                    return
-                }
-
-                val apkFiles = folder.listFiles { file ->
-                    file.extension.equals("apk", true)
-                }
-
-                if (!apkFiles.isNullOrEmpty()) {
-
-                    viewModel.installApp(apkFiles.first().absolutePath)
-
-                } else {
-
-                    Snackbar.make(binding.root, "No APK found in bundle", Snackbar.LENGTH_LONG).show()
-                }
-            }
-
-            else -> {
-
-                Snackbar.make(binding.root, "Unsupported file type", Snackbar.LENGTH_LONG).show()
-            }
-        }
+        viewModel.installApp(path)
     }
 
     /**
