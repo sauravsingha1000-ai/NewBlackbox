@@ -8,6 +8,11 @@ import java.util.zip.ZipFile
 
 object BundleInstaller {
 
+    private const val TAG = "BundleInstaller"
+
+    /**
+     * Detect bundle type
+     */
     fun detectType(path: String): String {
 
         return when {
@@ -24,6 +29,9 @@ object BundleInstaller {
         }
     }
 
+    /**
+     * Extract bundle packages (APKS / XAPK / APKM)
+     */
     fun extractBundle(context: Context, path: String): File? {
 
         return try {
@@ -33,15 +41,23 @@ object BundleInstaller {
                 "bundle_temp"
             )
 
-            if (!outputDir.exists()) {
-                outputDir.mkdirs()
+            // Clean previous extraction
+            if (outputDir.exists()) {
+                outputDir.deleteRecursively()
             }
+
+            outputDir.mkdirs()
 
             val zip = ZipFile(path)
 
             zip.entries().asSequence().forEach { entry ->
 
                 val file = File(outputDir, entry.name)
+
+                // Security check (Zip Slip protection)
+                if (!file.canonicalPath.startsWith(outputDir.canonicalPath)) {
+                    throw SecurityException("Zip path traversal detected")
+                }
 
                 if (entry.isDirectory) {
 
@@ -61,11 +77,15 @@ object BundleInstaller {
                 }
             }
 
+            zip.close()
+
+            Log.d(TAG, "Bundle extracted to: ${outputDir.absolutePath}")
+
             outputDir
 
         } catch (e: Exception) {
 
-            Log.e("BundleInstaller", "Extraction failed", e)
+            Log.e(TAG, "Extraction failed", e)
 
             null
         }
